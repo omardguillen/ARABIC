@@ -1,0 +1,963 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1"/>
+<title>Arabic Verbs 🌙</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#0f0c29;font-family:Georgia,serif;color:#fff;min-height:100vh}
+button{font-family:Georgia,serif;transition:all .2s}
+input[type=range]{-webkit-appearance:none;width:100%;height:6px;border-radius:3px;background:#333;outline:none}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;height:22px;border-radius:50%;background:#f9d423;cursor:pointer}
+input[type=text]{outline:none;font-family:Arial,sans-serif}
+::-webkit-scrollbar{width:6px}
+::-webkit-scrollbar-thumb{background:#444;border-radius:3px}
+.screen{display:none;min-height:100vh}
+.screen.active{display:block}
+.ar{font-family:Arial,sans-serif;direction:rtl}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+@keyframes popIn{0%{transform:scale(.9);opacity:0}100%{transform:scale(1);opacity:1}}
+.tip-word{position:relative;display:inline-block;cursor:pointer}
+.tip-word .tip{opacity:0;transition:opacity .15s;position:absolute;bottom:110%;left:50%;transform:translateX(-50%);background:#1e1b4b;border:1px solid #7c3aed;border-radius:8px;padding:4px 10px;font-size:13px;color:#c4b5fd;white-space:nowrap;pointer-events:none;z-index:100;direction:ltr;box-shadow:0 4px 12px rgba(0,0,0,.5);font-family:Georgia,serif}
+.tip-word.tip-open .tip{opacity:1}
+.grad-bar{height:8px;background:#333;border-radius:4px;overflow:hidden}
+.grad-bar-fill{height:100%;background:linear-gradient(90deg,#f9d423,#ff4e50);border-radius:4px;transition:width .3s}
+.card{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:28px;padding:30px 22px;box-shadow:0 12px 48px rgba(0,0,0,.5);user-select:none}
+.btn-main{padding:20px;border-radius:18px;border:none;background:linear-gradient(90deg,#f9d423,#ff4e50);color:#1a1a2e;font-weight:700;font-size:20px;cursor:pointer;letter-spacing:1px;box-shadow:0 4px 28px rgba(249,212,35,.3);width:100%}
+.btn-outline{padding:15px;border-radius:18px;border:2px solid #444;background:rgba(255,255,255,.04);color:#aaa;font-size:16px;cursor:pointer;width:100%}
+.btn-drill{padding:17px;border-radius:18px;font-weight:700;font-size:17px;cursor:pointer;width:100%}
+.btn-ai{padding:15px;border-radius:18px;border:2px solid #7c3aed;background:rgba(124,58,237,.08);color:#a78bfa;font-size:16px;cursor:pointer;font-weight:600;width:100%}
+.btn-yes{flex:1;padding:20px;border-radius:18px;border:2px solid #4ade80;background:rgba(74,222,128,.12);color:#4ade80;font-size:28px;cursor:pointer;font-weight:700}
+.btn-no{flex:1;padding:20px;border-radius:18px;border:2px solid #f87171;background:rgba(248,113,113,.12);color:#f87171;font-size:28px;cursor:pointer;font-weight:700}
+.seg-btn{flex:1;padding:13px 6px;border-radius:14px;border:2px solid #444;background:rgba(255,255,255,.05);color:#888;font-size:13px;cursor:pointer;font-family:Arial,sans-serif;line-height:1.4}
+.seg-btn.active-y{border-color:#f9d423;background:rgba(249,212,35,.12);color:#f9d423}
+.seg-btn.active-r{border-color:#ff4e50;background:rgba(255,78,80,.12);color:#ff4e50}
+.wrap{width:100%;max-width:520px;margin:0 auto;padding:24px 16px}
+.center{display:flex;flex-direction:column;align-items:center;justify-content:center}
+.gap{display:flex;flex-direction:column;gap:20px}
+.row{display:flex;gap:8px}
+.badge-present{font-size:11px;color:#f9d423;letter-spacing:2px;text-transform:uppercase}
+.badge-past{font-size:11px;color:#ff4e50;letter-spacing:2px;text-transform:uppercase}
+.ar-box-present{flex:1;min-width:130px;background:rgba(249,212,35,.08);border:1px solid rgba(249,212,35,.3);border-radius:16px;padding:14px 12px;text-align:center}
+.ar-box-past{flex:1;min-width:130px;background:rgba(255,78,80,.08);border:1px solid rgba(255,78,80,.3);border-radius:16px;padding:14px 12px;text-align:center}
+.speak-btn{margin-top:8px;background:none;border:none;font-size:18px;cursor:pointer;padding:4px 14px;border-radius:20px}
+.lbl{font-size:12px;letter-spacing:2px;color:#f9d423;text-transform:uppercase;margin-bottom:10px}
+</style>
+</head>
+<body>
+
+<!-- SCREENS -->
+<div id="screen-menu" class="screen active"></div>
+<div id="screen-game" class="screen"></div>
+<div id="screen-list" class="screen"></div>
+<div id="screen-ai" class="screen"></div>
+<div id="screen-ai-activity" class="screen"></div>
+
+<script>
+// ── DATA ──────────────────────────────────────────────────────────────────
+const verbs = [
+  { en: "to write", present: "يَكْتُبُ", past: "كَتَبَ" },
+  { en: "to sit down", present: "يَجْلِسُ", past: "جَلَسَ" },
+  { en: "to stand up / get up", present: "يَقُومُ", past: "قَامَ" },
+  { en: "to translate", present: "يُتَرْجِمُ", past: "تَرْجَمَ" },
+  { en: "to enter", present: "يَدْخُلُ", past: "دَخَلَ" },
+  { en: "to go out / exit", present: "يَخْرُجُ", past: "خَرَجَ" },
+  { en: "to study", present: "يَدْرُسُ", past: "دَرَسَ" },
+  { en: "to revise / review", present: "يُذَاكِرُ", past: "ذَاكَرَ" },
+  { en: "to find", present: "يَجِدُ", past: "وَجَدَ" },
+  { en: "to take / grab", present: "يَأْخُذُ", past: "أَخَذَ" },
+  { en: "to say", present: "يَقُولُ", past: "قَالَ" },
+  { en: "to go", present: "يَذْهَبُ", past: "ذَهَبَ" },
+  { en: "to pray", present: "يُصَلِّي", past: "صَلَّى" },
+  { en: "to do ablution (wudu)", present: "يَتَوَضَّأُ", past: "تَوَضَّأَ" },
+  { en: "please / go ahead", present: "يَتَفَضَّلُ", past: "تَفَضَّلَ" },
+  { en: "to watch", present: "يُشَاهِدُ", past: "شَاهَدَ" },
+  { en: "to want", present: "يُرِيدُ", past: "أَرَادَ" },
+  { en: "to buy", present: "يَشْتَرِي", past: "اشْتَرَى" },
+  { en: "to sell", present: "يَبِيعُ", past: "بَاعَ" },
+  { en: "to ask (a question)", present: "يَسْأَلُ", past: "سَأَلَ" },
+  { en: "to answer / respond", present: "يُجِيبُ", past: "أَجَابَ" },
+  { en: "to sleep", present: "يَنَامُ", past: "نَامَ" },
+  { en: "to wake up", present: "يَسْتَيْقِظُ", past: "اسْتَيْقَظَ" },
+  { en: "to wipe / clean", present: "يَمْسَحُ", past: "مَسَحَ" },
+  { en: "to wash", present: "يَغْسِلُ", past: "غَسَلَ" },
+  { en: "to iron", present: "يَكْوِي", past: "كَوَى" },
+  { en: "to eat", present: "يَأْكُلُ", past: "أَكَلَ" },
+  { en: "to drink", present: "يَشْرَبُ", past: "شَرِبَ" },
+  { en: "to see", present: "يَرَى", past: "رَأَى" },
+  { en: "to take / have (food)", present: "يَتَنَاوَلُ", past: "تَنَاوَلَ" },
+  { en: "to travel", present: "يُسَافِرُ", past: "سَافَرَ" },
+  { en: "to visit", present: "يَزُورُ", past: "زَارَ" },
+  { en: "to have (possession)", present: "لَدَيْهِ / لَهُ / عِنْدَهُ", past: "كَانَ + ..." },
+  { en: "to prefer", present: "يُفَضِّلُ", past: "فَضَّلَ" },
+  { en: "to be able to / can", present: "يَسْتَطِيعُ", past: "اسْتَطَاعَ" },
+  { en: "to put / place", present: "يَضَعُ", past: "وَضَعَ" },
+  { en: "to be / exist", present: "يَكُونُ", past: "كَانَ" },
+  { en: "not to be (negation)", present: "لَيْسَ", past: "—" },
+  { en: "to ride (a bus etc.)", present: "يَرْكَبُ", past: "رَكِبَ" },
+  { en: "to wait", present: "يَنْتَظِرُ", past: "انْتَظَرَ" },
+  { en: "to come", present: "يَأْتِي", past: "أَتَى" },
+  { en: "to arrive", present: "يَجِيءُ", past: "جَاءَ" },
+  { en: "to return", present: "يَعُودُ", past: "عَادَ" },
+  { en: "to finish / end", present: "يَنْتَهِي", past: "انْتَهَى" },
+  { en: "to begin / start", present: "يَبْدَأُ", past: "بَدَأَ" },
+  { en: "to teach", present: "يُدَرِّسُ", past: "دَرَّسَ" },
+  { en: "to swim", present: "يَسْبَحُ", past: "سَبَحَ" },
+  { en: "to die", present: "يَمُوتُ", past: "مَاتَ" },
+  { en: "to live / reside", present: "يَسْكُنُ", past: "سَكَنَ" },
+  { en: "to drive", present: "يَقُودُ", past: "قَادَ" },
+  { en: "to edit / free", present: "يُحَرِّرُ", past: "حَرَّرَ" },
+  { en: "to read", present: "يَقْرَأُ", past: "قَرَأَ" },
+  { en: "to speak / talk", present: "يَتَكَلَّمُ / يَتَحَدَّثُ", past: "تَكَلَّمَ / تَحَدَّثَ" },
+  { en: "to know", present: "يَعْلَمُ", past: "عَلِمَ" },
+  { en: "to explain / inform", present: "يُخْبِرُ", past: "أَخْبَرَ" },
+  { en: "to obtain / get", present: "يَحْصُلُ عَلَى", past: "حَصَلَ عَلَى" },
+  { en: "to give", present: "يُعْطِي", past: "أَعْطَى" },
+  { en: "to leave / abandon", present: "يَتْرُكُ", past: "تَرَكَ" },
+  { en: "to stay / remain", present: "يَبْقَى", past: "بَقِيَ" },
+  { en: "to attend / be present", present: "يَحْضُرُ", past: "حَضَرَ" },
+  { en: "to bring / fetch", present: "يُحْضِرُ", past: "أَحْضَرَ" },
+  { en: "to get married", present: "يَتَزَوَّجُ", past: "تَزَوَّجَ" },
+  { en: "to go shopping", present: "يَتَسَوَّقُ", past: "تَسَوَّقَ" },
+  { en: "to invite", present: "يَدْعُو", past: "دَعَا" },
+  { en: "to move (place to place)", present: "يَنْتَقِلُ", past: "انْتَقَلَ" },
+  { en: "to practice a sport", present: "يُمَارِسُ", past: "مَارَسَ" },
+  { en: "to collect / gather", present: "يَجْمَعُ", past: "جَمَعَ" },
+  { en: "to manage / run", present: "يُدَبِّرُ", past: "دَبَّرَ" },
+  { en: "to choose / select", present: "يَخْتَارُ", past: "اخْتَارَ" },
+  { en: "to happen / occur", present: "يَحْدُثُ", past: "حَدَثَ" },
+  { en: "to take time / last", present: "يَسْتَغْرِقُ", past: "اسْتَغْرَقَ" },
+  { en: "to ask for / request", present: "يَطْلُبُ", past: "طَلَبَ" },
+  { en: "to scrub / mop", present: "يَكْنُسُ", past: "كَنَسَ" },
+  { en: "to listen", present: "يَسْمَعُ", past: "سَمِعَ" },
+  { en: "to look / observe", present: "يَنْظُرُ", past: "نَظَرَ" },
+  { en: "to think", present: "يُفَكِّرُ", past: "فَكَّرَ" },
+  { en: "to remember / recall", present: "يَتَذَكَّرُ", past: "تَذَكَّرَ" },
+  { en: "to confirm", present: "يُؤَكِّدُ", past: "أَكَّدَ" },
+  { en: "to leave / depart", present: "يُغَادِرُ", past: "غَادَرَ" },
+  { en: "to stay / lodge", present: "يُقِيمُ", past: "أَقَامَ" },
+  { en: "to wear / put on", present: "يَرْتَدِي", past: "ارْتَدَى" },
+  { en: "to leave / go away", present: "يَرْحَلُ", past: "رَحَلَ" },
+  { en: "to exist", present: "يُوجَدُ", past: "وُجِدَ" },
+  { en: "to lose", present: "يَفْقِدُ", past: "فَقَدَ" },
+  { en: "to open", present: "يَفْتَحُ", past: "فَتَحَ" },
+  { en: "to believe (that)", present: "يَعْتَقِدُ (أن)", past: "اعْتَقَدَ" },
+  { en: "to smile", present: "يَبْتَسِمُ", past: "ابْتَسَمَ" },
+  { en: "to shake", present: "يَهُزُّ", past: "هَزَّ" },
+  { en: "to laugh", present: "يَضْحَكُ", past: "ضَحِكَ" },
+  { en: "to explain", present: "يَشْرَحُ", past: "شَرَحَ" },
+  { en: "to clarify", present: "يُوَضِّحُ", past: "وَضَّحَ" },
+  { en: "to learn", present: "يَتَعَلَّمُ", past: "تَعَلَّمَ" },
+  { en: "to understand", present: "يَفْهَمُ", past: "فَهِمَ" },
+  { en: "to think / believe", present: "يَظُنُّ", past: "ظَنَّ" },
+  { en: "to love / like", present: "يُحِبُّ", past: "أَحَبَّ" },
+  { en: "to repeat / do again", present: "يُعِيدُ", past: "أَعَادَ" },
+  { en: "to help", present: "يُسَاعِدُ", past: "سَاعَدَ" },
+  { en: "to express", present: "يُعَبِّرُ", past: "عَبَّرَ" },
+  { en: "to memorize", present: "يَحْفَظُ", past: "حَفِظَ" },
+  { en: "to complete / finish", present: "يُكْمِلُ", past: "أَكْمَلَ" },
+  { en: "to review / go back over", present: "يُرَاجِعُ", past: "رَاجَعَ" },
+  { en: "to feel", present: "يَشْعُرُ", past: "شَعَرَ" },
+  { en: "to strive / make effort", present: "يَجْتَهِدُ", past: "اجْتَهَدَ" },
+  { en: "to meet / get together with", present: "يُقَابِلُ", past: "قَابَلَ" },
+  { en: "to prepare", present: "يُحَضِّرُ", past: "حَضَّرَ" },
+  { en: "to add", present: "يُضِيفُ", past: "أَضَافَ" },
+  { en: "to try / attempt", present: "يُحَاوِلُ", past: "حَاوَلَ" },
+  { en: "to agree with", present: "يَتَّفِقُ مَعَ", past: "اتَّفَقَ مَعَ" },
+  { en: "to make (someone happy)", present: "يَجْعَلُ", past: "جَعَلَ" },
+  { en: "to get a disease", present: "يُصَابُ بِـ", past: "أُصِيبَ بِـ" },
+  { en: "to advise", present: "يَنْصَحُ", past: "نَصَحَ" },
+  { en: "to be absent", present: "يَتَغَيَّبُ", past: "تَغَيَّبَ" },
+  { en: "to be able to do sth", present: "يَتَمَكَّنُ مِنْ", past: "تَمَكَّنَ مِنْ" },
+  { en: "to recommend / suggest", present: "يَقْتَرِحُ", past: "اقْتَرَحَ" },
+  { en: "should / must", present: "يَجِبُ", past: "وَجَبَ" },
+  { en: "to complain", present: "يَشْتَكِي", past: "اشْتَكَى" },
+  { en: "to check / examine", present: "يَفْحَصُ", past: "فَحَصَ" },
+  { en: "to measure", present: "يَقِيسُ", past: "قَاسَ" },
+  { en: "to heal / recover", present: "يَشْفَى", past: "شَفِيَ" },
+  { en: "to rest", present: "يَرْتَاحُ", past: "ارْتَاحَ" },
+  { en: "to approach", present: "يَقْتَرِبُ", past: "اقْتَرَبَ" },
+  { en: "to affect", present: "يُؤَثِّرُ", past: "أَثَّرَ" },
+  { en: "to extend / become longer", present: "يَتَمَدَّدُ", past: "تَمَدَّدَ" },
+  { en: "to follow / obey", present: "يَتَّبِعُ", past: "اتَّبَعَ" },
+  { en: "to be different", present: "يَخْتَلِفُ", past: "اخْتَلَفَ" },
+  { en: "to lose weight", present: "يَنْقُصُ وَزْن", past: "نَقَصَ وَزْن" },
+  { en: "to gain weight", present: "يَزِيدُ وَزْن", past: "زَادَ" },
+  { en: "to resemble", present: "يَتَشَابَهُ", past: "تَشَابَهَ" },
+  { en: "to remain / stay the same", present: "يَظَلُّ", past: "ظَلَّ" },
+  { en: "to become", present: "يُصْبِحُ", past: "أَصْبَحَ" },
+  { en: "to increase / go up", present: "يَرْتَفِعُ", past: "ارْتَفَعَ" },
+  { en: "to decrease / go down", present: "يَنْخَفِضُ", past: "انْخَفَضَ" },
+  { en: "to treat / cure", present: "يُعَالِجُ", past: "عَالَجَ" },
+  { en: "to succeed", present: "يَنْجَحُ", past: "نَجَحَ" },
+  { en: "to progress / improve", present: "يَتَطَوَّرُ", past: "تَطَوَّرَ" },
+  { en: "to arrive at / achieve", present: "يَصِلُ", past: "وَصَلَ" },
+  { en: "to get up / rise", present: "يَنْهَضُ", past: "نَهَضَ" },
+  { en: "to shower", present: "يَسْتَحِمُّ", past: "اسْتَحَمَّ" },
+  { en: "to get ready / prepare", present: "يَتَهَيَّأُ", past: "تَهَيَّأَ" },
+  { en: "to browse / glance through", present: "يُطَالِعُ", past: "طَالَعَ" },
+  { en: "to play an instrument", present: "يَعْزِفُ", past: "عَزَفَ" },
+  { en: "to stay up late", present: "يَسْهَرُ", past: "سَهِرَ" },
+  { en: "to faint", present: "يُغْمَى عَلَيْهِ", past: "أُغْمِيَ عَلَيْهِ" },
+  { en: "to wake up (recover)", present: "يُفِيقُ", past: "أَفَاقَ" },
+  { en: "to change", present: "يَتَغَيَّرُ", past: "تَغَيَّرَ" },
+  { en: "to intend / mean", present: "يَقْصِدُ", past: "قَصَدَ" },
+  { en: "to spend time", present: "يَقْضِي", past: "قَضَى" },
+  // New verbs
+  { en: "to develop / progress", present: "يَتَقَدَّمُ", past: "تَقَدَّمَ" },
+  { en: "to prohibit / forbid", present: "يَنْهَى", past: "نَهَى" },
+  { en: "to warn / alert", present: "يُحَذِّرُ", past: "حَذَّرَ" },
+  { en: "to carry / bear", present: "يَحْمِلُ", past: "حَمَلَ" },
+  { en: "to harm / hurt", present: "يَضُرُّ", past: "ضَرَّ" },
+  { en: "to believe in", present: "يُؤْمِنُ بِـ", past: "آمَنَ بِـ" },
+  { en: "to do / act", present: "يَفْعَلُ", past: "فَعَلَ" },
+  { en: "to need", present: "يَحْتَاجُ", past: "احْتَاجَ" },
+  // From text (leisure/recreation passage)
+  { en: "to work", present: "يَعْمَلُ", past: "عَمِلَ" },
+  { en: "to kill time (waste time)", present: "يَقْتُلُ الوَقْتَ", past: "قَتَلَ الوَقْتَ" },
+  { en: "to relax / unwind (soul)", present: "يَرُوحُ عَنِ النَّفْسِ", past: "رَاحَ عَنِ النَّفْسِ" },
+  { en: "to fish / hunt", present: "يَصِيدُ", past: "صَادَ" },
+];
+
+const VOCAB_CONTEXT = `
+L'estudiant es diu Omar, parla català, castellà, anglès i francès. Aprèn àrab estàndard modern (MSA). Nivell aproximat A2-B1. Coneix gramàtica bàsica: present, passat, imperatius, negació (لا/لن/لم/ليس), pronoms possessius, pronoms demostratius, frases relatives amb الذي/التي, verb كان en passat, partícula أن.
+
+=== VERBS (present هو / passat) ===
+يَكْتُبُ/كَتَبَ، يَجْلِسُ/جَلَسَ، يَقُومُ/قَامَ، يُتَرْجِمُ/تَرْجَمَ، يَدْخُلُ/دَخَلَ، يَخْرُجُ/خَرَجَ، يَدْرُسُ/دَرَسَ، يُذَاكِرُ/ذَاكَرَ، يَجِدُ/وَجَدَ، يَأْخُذُ/أَخَذَ، يَقُولُ/قَالَ، يَذْهَبُ/ذَهَبَ، يُصَلِّي/صَلَّى، يَتَوَضَّأُ/تَوَضَّأَ، يُشَاهِدُ/شَاهَدَ، يُرِيدُ/أَرَادَ، يَشْتَرِي/اشْتَرَى، يَبِيعُ/بَاعَ، يَسْأَلُ/سَأَلَ، يُجِيبُ/أَجَابَ، يَنَامُ/نَامَ، يَسْتَيْقِظُ/اسْتَيْقَظَ، يَمْسَحُ/مَسَحَ، يَغْسِلُ/غَسَلَ، يَكْوِي/كَوَى، يَأْكُلُ/أَكَلَ، يَشْرَبُ/شَرِبَ، يَرَى/رَأَى، يَتَنَاوَلُ/تَنَاوَلَ، يُسَافِرُ/سَافَرَ، يَزُورُ/زَارَ، يُفَضِّلُ/فَضَّلَ، يَسْتَطِيعُ/اسْتَطَاعَ، يَضَعُ/وَضَعَ، يَكُونُ/كَانَ، يَرْكَبُ/رَكِبَ، يَنْتَظِرُ/انْتَظَرَ، يَأْتِي/أَتَى، يَجِيءُ/جَاءَ، يَعُودُ/عَادَ، يَنْتَهِي/انْتَهَى، يَبْدَأُ/بَدَأَ، يُدَرِّسُ/دَرَّسَ، يَسْبَحُ/سَبَحَ، يَمُوتُ/مَاتَ، يَسْكُنُ/سَكَنَ، يَقُودُ/قَادَ، يُحَرِّرُ/حَرَّرَ، يَقْرَأُ/قَرَأَ، يَتَكَلَّمُ/تَكَلَّمَ، يَتَحَدَّثُ/تَحَدَّثَ، يَعْلَمُ/عَلِمَ، يُخْبِرُ/أَخْبَرَ، يَحْصُلُ عَلَى/حَصَلَ عَلَى، يُعْطِي/أَعْطَى، يَتْرُكُ/تَرَكَ، يَبْقَى/بَقِيَ، يَحْضُرُ/حَضَرَ، يُحْضِرُ/أَحْضَرَ، يَتَزَوَّجُ/تَزَوَّجَ، يَتَسَوَّقُ/تَسَوَّقَ، يَدْعُو/دَعَا، يَنْتَقِلُ/انْتَقَلَ، يُمَارِسُ/مَارَسَ، يَجْمَعُ/جَمَعَ، يُدَبِّرُ/دَبَّرَ، يَخْتَارُ/اخْتَارَ، يَحْدُثُ/حَدَثَ، يَسْتَغْرِقُ/اسْتَغْرَقَ، يَطْلُبُ/طَلَبَ، يَكْنُسُ/كَنَسَ، يَسْمَعُ/سَمِعَ، يَنْظُرُ/نَظَرَ، يُفَكِّرُ/فَكَّرَ، يَتَذَكَّرُ/تَذَكَّرَ، يُؤَكِّدُ/أَكَّدَ، يُغَادِرُ/غَادَرَ، يُقِيمُ/أَقَامَ، يَرْتَدِي/ارْتَدَى، يَرْحَلُ/رَحَلَ، يُوجَدُ/وُجِدَ، يَفْقِدُ/فَقَدَ، يَفْتَحُ/فَتَحَ، يَعْتَقِدُ/اعْتَقَدَ، يَبْتَسِمُ/ابْتَسَمَ، يَهُزُّ/هَزَّ، يَضْحَكُ/ضَحِكَ، يَشْرَحُ/شَرَحَ، يُوَضِّحُ/وَضَّحَ، يَتَعَلَّمُ/تَعَلَّمَ، يَفْهَمُ/فَهِمَ، يَظُنُّ/ظَنَّ، يُحِبُّ/أَحَبَّ، يُعِيدُ/أَعَادَ، يُسَاعِدُ/سَاعَدَ، يُعَبِّرُ/عَبَّرَ، يَحْفَظُ/حَفِظَ، يُكْمِلُ/أَكْمَلَ، يُرَاجِعُ/رَاجَعَ، يَشْعُرُ/شَعَرَ، يَجْتَهِدُ/اجْتَهَدَ، يُقَابِلُ/قَابَلَ، يُحَضِّرُ/حَضَّرَ، يُضِيفُ/أَضَافَ، يُحَاوِلُ/حَاوَلَ، يَتَّفِقُ مَعَ/اتَّفَقَ، يَجْعَلُ/جَعَلَ، يُصَابُ بِـ/أُصِيبَ، يَنْصَحُ/نَصَحَ، يَتَغَيَّبُ/تَغَيَّبَ، يَتَمَكَّنُ مِنْ/تَمَكَّنَ، يَقْتَرِحُ/اقْتَرَحَ، يَجِبُ/وَجَبَ، يَشْتَكِي/اشْتَكَى، يَفْحَصُ/فَحَصَ، يَقِيسُ/قَاسَ، يَشْفَى/شَفِيَ، يَرْتَاحُ/ارْتَاحَ، يَقْتَرِبُ/اقْتَرَبَ، يُؤَثِّرُ/أَثَّرَ، يَتَمَدَّدُ/تَمَدَّدَ، يَتَّبِعُ/اتَّبَعَ، يَخْتَلِفُ/اخْتَلَفَ، يَظَلُّ/ظَلَّ، يُصْبِحُ/أَصْبَحَ، يَرْتَفِعُ/ارْتَفَعَ، يَنْخَفِضُ/انْخَفَضَ، يُعَالِجُ/عَالَجَ، يَنْجَحُ/نَجَحَ، يَتَطَوَّرُ/تَطَوَّرَ، يَصِلُ/وَصَلَ، يَنْهَضُ/نَهَضَ، يَسْتَحِمُّ/اسْتَحَمَّ، يَتَهَيَّأُ/تَهَيَّأَ، يُطَالِعُ/طَالَعَ، يَعْزِفُ/عَزَفَ، يَسْهَرُ/سَهِرَ، يُفِيقُ/أَفَاقَ، يَتَغَيَّرُ/تَغَيَّرَ، يَقْصِدُ/قَصَدَ، يَقْضِي/قَضَى، يَتَقَدَّمُ/تَقَدَّمَ، يَنْهَى/نَهَى، يُحَذِّرُ/حَذَّرَ، يَحْمِلُ/حَمَلَ، يَضُرُّ/ضَرَّ، يُؤْمِنُ بِـ/آمَنَ، يَفْعَلُ/فَعَلَ، يَحْتَاجُ/احْتَاجَ، يَعْمَلُ/عَمِلَ، يَصِيدُ/صَادَ، يَرُوحُ عَنِ النَّفْسِ/رَاحَ، يَتَسَلَّقُ/تَسَلَّقَ، يَرْكُضُ/رَكَضَ، يُكَرِّرُ/كَرَّرَ
+
+=== VOCABULARI PER CATEGORIES ===
+
+FAMÍLIA: جَدّ، جَدَّة، أَب، أُمّ، وَالِد، وَالِدَة، أَخ، أُخْت، ابْن، بِنْت، عَمّ، عَمَّة، خَال، خَالَة، حَفِيد، حَفِيدَة، زَوْج، زَوْجَة، أَطْفَال، طِفْل، ابْن العَمّ، بِنْت العَمّ، ابْن الخَال، بِنْت الخَال، أَبْنَاء، أَعْمَام، عَمَّات، خَيِّلَان، خَالَات، أُسْرَة
+
+PROFESSIONS: طَالِب، أُسْتَاذ/ة، مُدَرِّس/ة، مُتَرْجِم/ة، طَبِيب/ة، مُهَنْدِس، طَيَّار، مُمَرِّض/ة، صَيْدَلِيّ، صَيْدَلِيَّة، مُسَافِر، مُوَظَّف، سِيَاسِيّ، مُصَوِّر، مُدِير الشَّرِكَة، مَضِيفَة طَيَران، صَحَفِيّ
+
+CASA I HABITATGE: شُقَّة، حَيّ، رَقْم، دَوْر، مَبْنَى، غُرْفَة، غُرْفَة جُلُوس، غُرْفَة نَوْم، مَطْبَخ، حَمَّام، أَثَاث، سِتَارَة، أَرِيكَة، سَجَّادَة، سَرِير، ثَلَّاجَة، مِرْآة، سَخَّان، فُرْن، البَائِع، المُشْتَرِي، المُسْتَأْجِر، المُؤَجِّر، مُصَلَّى، مَسْجِد، جَامِعَة، مَطَار
+
+MENJAR I BEGUDES: مَاء، قَهْوَة، شَاي، حَلِيب، خُبْز، أُرُز، سَمَك، لَحْم، دَجَاج، فَاكِهَة، خُضَار، سُكَّر، عَسَل، جُبْن، زَيْت، زُبْدَة، مُرَبَّى، حَلْوَى، بَصَل، طَمَاطِم، خِيَار، تَمْر، عِنَب، بُنّ، عَدَس، فُول، كَعْك، طَبَق/أَطْبَاق، وَجْبَة، فُطُور، غَدَاء، عَشَاء، سَلَطَة، مَطْعَم، شَرَاب، عَصِير، مَائِدَة
+
+ROBA: قَمِيص، ثَوْب/أَثْوَاب، جَاكِيت، مِعْطَف، مَلَابِس
+
+COLORS: أَبْيَض، أَسْوَد، أَحْمَر، أَخْضَر، أَزْرَق، أَصْفَر، بُنِّي، رَمَادِي، بُرْتُقَالِي، بَنَفْسَجِي، وَرْدِي
+
+COS HUMÀ: رَأْس، عَيْن، أَنْف، فَم، أُذُن، رَقَبَة، شَعْر، صَدْر، يَد، ذِرَاع، إِصْبَع، بَطْن، فَخِذ، سَاق، كَعْب، قَدَم، رُكْبَة، أَسْنَان، سِنّ، حَنْجَرَة، ظَهْر
+
+DIES I TEMPS: الاثْنَيْن، الثُّلَاثَاء، الأَرْبِعَاء، الخَمِيس، الجُمُعَة، السَّبْت، الأَحَد، أَمْس، اليَوْم، غَداً، بَعْد غَد، أَوَّل أَمْس، يَوْم العَمَل، يَوْم العُطْلَة، الصَّبَاح، مَسَاء، لَيْلًا، سَاعَة، دَقِيقَة، ثَانِيَة، أُسْبُوع، شَهْر، سَنَة، نِصْف، رُبُع، الفَجْر، الظُّهْر، العَصْر، المَغْرِب، العِشَاء
+
+HORES: السَّاعَة الوَاحِدَة، الثَّانِيَة، الثَّالِثَة، الرَّابِعَة، الخَامِسَة، السَّادِسَة، السَّابِعَة، الثَّامِنَة، التَّاسِعَة، العَاشِرَة، الحَادِيَة عَشْرَة، الثَّانِيَة عَشْرَة، وَالنِّصْف، وَالرُّبُع، وَخَمْس دَقَائِق
+
+NÚMEROS: وَاحِد، اثْنَان، ثَلَاثَة، أَرْبَعَة، خَمْسَة، سِتَّة، سَبْعَة، ثَمَانِيَة، تِسْعَة، عَشَرَة، عِشْرُون، ثَلَاثُون، ثَمَانُون، مِئَة، أَلْف، الأَوَّل، الثَّانِي، الثَّالِث، الرَّابِع، الخَامِس، السَّادِس، السَّابِع، الثَّامِن، التَّاسِع، العَاشِر
+
+TRANSPORT: سَيَّارَة، حَافِلَة، قِطَار، طَائِرَة، دَرَّاجَة، دَرَّاجَة نَارِيَّة، تَذْكِرَة/تَذَاكِر، حَجْز، جَوَاز السَّفَر، تَأْشِيرَة، خُطُوط جَوِّيَّة، فُنْدُق
+
+ESCOLA/UNIVERSITAT: كِتَاب/كُتُب، قَلَم، دَفْتَر، مُعْجَم، صَفّ، دَرْس/حِصَّة، امْتِحَان، لَوْحَة، لَوْحَة السَّبُّورَة، مُفْرَدَات، قَوَاعِد، اللُّغَة العَرَبِيَّة، الرِّيَاضِيَّات، العُلُوم، حَاسُوب، جَدْوَل دِرَاسِي، كُلِّيَّة الطِّبّ، كُلِّيَّة التَّرْبِيَة، هَنْدَسَة، مُرَاجَعَة، نُصُوص، أَخْطَاء، أَمْثِلَة
+
+SALUT: طَبِيب، طَبِيب الأَسْنَان، دَوَاء، مُسْتَشْفَى، صَيْدَلِيَّة، صُدَاع، زُكَام، أَسْنَان، رَاحَة، إِجَازَة مَرَضِيَّة، نَصِيحَة، تَقْرِير طِبِّي، مَرِيض، أَلَم، الصِّحَّة، مَوْعِد/مَوَاعِيد
+
+EMOCIONS I ESTATS: سَعِيد، حَزِين، مُتَوَتِّر، مُتْعَب، مُتَحَمِّس، خَائِف، هَادِئ، فَخُور، مَشَاعِر، سَعَادَة، حُزْن، رَاحَة، جَوْعَان
+
+ADJECTIUS: كَبِير، صَغِير، جَمِيل، طَوِيل، قَصِير، سَمِين، نَحِيف، قَرِيب، بَعِيد، صَحِيح، غَالِي، رَخِيص، سَرِيع، بَطِيء، صَعْب، سَهْل، مُفِيد، جَدِيد، قَدِيم، نَظِيف، مُخْتَلِف، مُهِمّ، شَدِيد، بَسِيط، مُثِير، جَيِّد، سَيِّئ، صَحِيح، خَاطِئ، مُتَلَوِّث، نَقِيّ، هَادِئ، مُزْدَحِم
+
+NATURA I TEMPS METEOROLÒGIC: طَقْس، جَوّ، مَطَر، شَمْس، قَمَر، سَمَاء، رِيَاح، دَرَجَة الحَرَارَة، حَارّ، بَارِد، دَافِئ، مُعْتَدِل، غَائِم، مُبْتَلّ، مِظَلَّة، فَصْل الصَّيْف، فَصْل الرَّبِيع، فَصْل الخَرِيف، فَصْل الشِّتَاء، شَاطِئ، جَبَل، بَرّ، حَدِيقَة
+
+HOBBIES I CULTURA: هِوَايَة، قِرَاءَة، كُتُب رِوَايَات، كُتُب عِلْمِيَّة، مَجَلَّة، رِيَاضَة، كُرَة القَدَم، كُرَة السَّلَّة، سِبَاحَة، طَبْخ، خِيَاطَة، مُوسِيقَى، تَصْوِير، سِيْنِمَا، فِيلْم/أَفْلَام، رِحْلَة، الفُرُوسِيَّة، جَمْع الطَّوَابِع، ثَقَافَة، صَحَافَة، نَادٍ، جَمْعِيَّة، فَرِيق، لَاعِب، تِلْفَاز
+
+TREBALL I NEGOCIS: عَمِيل/عُمَلَاء، مُقَابَلَة، وَكِيل، مَشْغُول، خِبْرَة، مُسْتَقْبَل، شَرِكَة
+
+DIRECCIONS I LLOC: أَمَام، خَلْف، عَلَى اليَمِين، عَلَى الشِّمَال، يَسَار، فَوْق، تَحْت، شَمَال، جَنُوب، شَرْق، غَرْب، الشَّرْق الأَوْسَط، هُنَا، هُنَاك، بَعِيد عَن، قَرِيب مِن، فِي الخَارِج، فِي الدَّاخِل
+
+EXPRESSIONS I CONNECTORS: مَرْحَبَا، أَهْلًا وَسَهْلًا، شُكْرًا، مَعَ السَّلَامَة، مِنْ فَضْلِك، عَفْوًا، جَزَاكَ اللَّه خَيْرًا، آسِف، أَيْضًا، دَائِمًا، أَبَدًا، أَحْيَانًا، رُبَّمَا، لَكِن، بَلْ، هَكَذَا، أَخِيرًا، أَوَّلًا، فِي البِدَايَة، بَعْد ذَلِك، ثُمَّ، لِكَي، بَدَلًا مِن، مُنْذُ، حَتَّى الآن، بِسَبَب، لِمَاذَا، بِسُرْعَة، تَقْرِيبًا، جِدًّا، قَلِيل، كَثِير، كُلّ، بَعْض، أَكْثَر مِن، أَقَلّ، فَرْد/أَفْرَاد، النَّاس، بَيْن، مِن قَبْل، بَعْد، قَبْل، الآن، لَيْسَ هُنَاك
+
+PREGUNTES: مَاذَا؟، مَن؟، أَيْن؟، مَتَى؟، كَيْف؟، كَمْ؟، لِمَاذَا؟، أَيّ؟، هَل؟، مِنْ أَيْن؟، إِلَى أَيْن؟
+`;
+
+// ── STORAGE ───────────────────────────────────────────────────────────────
+const STORAGE_KEY = "arabic_verb_stats_v3";
+function loadStats(){try{const r=localStorage.getItem(STORAGE_KEY);if(r)return JSON.parse(r);}catch(e){}return{};}
+function saveStats(s){try{localStorage.setItem(STORAGE_KEY,JSON.stringify(s));}catch(e){}}
+let stats = loadStats();
+
+// ── STATE ─────────────────────────────────────────────────────────────────
+let tenseMode = "both";    // both|present|past
+let direction = "mix";     // ar→en|en→ar|mix
+let cardCount = 20;
+let deck = [];
+let deckIdx = 0;
+let isDrill = false;
+let flipped = false;
+let speaking = null;
+let currentScreen = "menu";
+
+// ── HELPERS ───────────────────────────────────────────────────────────────
+function shuffle(arr){return [...arr].sort(()=>Math.random()-.5);}
+function failedVerbs(){return verbs.filter(v=>(stats[v.en]||{}).fails>0);}
+function makeDir(){return direction==="mix"?(Math.random()>.5?"ar→en":"en→ar"):direction;}
+
+function speakAr(text){
+  if(!window.speechSynthesis)return;
+  window.speechSynthesis.cancel();
+  const u=new SpeechSynthesisUtterance(text);
+  u.lang="ar-SA";u.rate=0.85;
+  const v=window.speechSynthesis.getVoices().find(v=>v.lang.startsWith("ar"));
+  if(v)u.voice=v;
+  window.speechSynthesis.speak(u);
+}
+
+function buildNormalDeck(){
+  const pool=shuffle(verbs).slice(0,cardCount);
+  const w=[];
+  pool.forEach(v=>{
+    const f=(stats[v.en]||{}).fails||0;
+    w.push(v);
+    if(f>=2)w.push(v);
+    if(f>=5)w.push(v);
+  });
+  return shuffle(w).map(v=>({verb:v,dir:makeDir()}));
+}
+function buildDrillDeck(){
+  return shuffle(failedVerbs()).map(v=>({verb:v,dir:makeDir()}));
+}
+
+// ── NAVIGATE ──────────────────────────────────────────────────────────────
+function showScreen(id){
+  document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
+  document.getElementById("screen-"+id).classList.add("active");
+  currentScreen=id;
+  window.scrollTo(0,0);
+}
+
+// ── ARABIC BLOCK ──────────────────────────────────────────────────────────
+function arabicBlock(verb, color){
+  const showP = tenseMode!=="past", showPa = tenseMode!=="present";
+  const c = color||"#fff";
+  let html = '<div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">';
+  if(showP){
+    html+=`<div class="ar-box-present">
+      <div class="badge-present">مضارع · Present</div>
+      <div class="ar" style="font-size:42px;color:${c};line-height:1.4;margin-top:8px">${verb.present}</div>
+      <button class="speak-btn" style="color:#f9d423" onclick="speakAr(${JSON.stringify(verb.present)});this.textContent='🔊';setTimeout(()=>this.textContent='🔈',1800)">🔈</button>
+    </div>`;
+  }
+  if(showPa){
+    html+=`<div class="ar-box-past">
+      <div class="badge-past">ماضي · Past</div>
+      <div class="ar" style="font-size:42px;color:${c};line-height:1.4;margin-top:8px">${verb.past}</div>
+      <button class="speak-btn" style="color:#ff4e50" onclick="speakAr(${JSON.stringify(verb.past)});this.textContent='🔊';setTimeout(()=>this.textContent='🔈',1800)">🔈</button>
+    </div>`;
+  }
+  html+='</div>';
+  return html;
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+// MENU
+// ══════════════════════════════════════════════════════════════════════════
+function renderMenu(){
+  const fv = failedVerbs();
+  const totalFails = Object.values(stats).reduce((s,e)=>s+(e.fails||0),0);
+  const drillStyle = fv.length>0
+    ? 'border:2px solid #f87171;background:rgba(248,113,113,.1);color:#f87171;'
+    : 'border:2px solid #333;background:rgba(255,255,255,.03);color:#444;';
+
+  document.getElementById("screen-menu").innerHTML=`
+  <div class="wrap" style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding-top:40px;padding-bottom:40px">
+    <div style="text-align:center;margin-bottom:32px">
+      <div style="font-size:62px">🌙</div>
+      <h1 style="font-size:40px;font-weight:700;letter-spacing:2px;margin:10px 0 0;background:linear-gradient(90deg,#f9d423,#ff4e50);-webkit-background-clip:text;-webkit-text-fill-color:transparent">Arabic Verbs</h1>
+      <p style="color:#aaa;margin-top:6px;font-size:15px">${verbs.length} verbs · flashcard trainer</p>
+    </div>
+    <div class="gap" style="width:100%;max-width:500px">
+      <div>
+        <div class="lbl">Temps a practicar</div>
+        <div class="row" id="tense-btns">
+          <button class="seg-btn ${tenseMode==='both'?'active-y':''}" onclick="setTense('both')">Present + Passat</button>
+          <button class="seg-btn ${tenseMode==='present'?'active-y':''}" onclick="setTense('present')">Només مضارع</button>
+          <button class="seg-btn ${tenseMode==='past'?'active-y':''}" onclick="setTense('past')">Només ماضي</button>
+        </div>
+      </div>
+      <div>
+        <div class="lbl">Direcció</div>
+        <div class="row">
+          <button class="seg-btn ${direction==='ar→en'?'active-r':''}" onclick="setDir('ar→en')">عربي → EN</button>
+          <button class="seg-btn ${direction==='en→ar'?'active-r':''}" onclick="setDir('en→ar')">EN → عربي</button>
+          <button class="seg-btn ${direction==='mix'?'active-r':''}" onclick="setDir('mix')">Mix</button>
+        </div>
+      </div>
+      <div>
+        <div class="lbl">Verbs al test: <span style="color:#fff;font-size:17px" id="count-lbl">${cardCount}</span></div>
+        <input type="range" min="5" max="${verbs.length}" step="5" value="${cardCount}" oninput="cardCount=+this.value;document.getElementById('count-lbl').textContent=this.value">
+        <div style="display:flex;justify-content:space-between;font-size:11px;color:#555;margin-top:4px"><span>5</span><span>${verbs.length}</span></div>
+      </div>
+      <button class="btn-main" onclick="startGame(false)">▶ Comença test</button>
+      <button class="btn-drill" style="${drillStyle}" onclick="startDrill()">
+        🔥 Practicar errors ${fv.length>0?`(${fv.length} verbs)`:"(cap error encara)"}
+      </button>
+      <button class="btn-outline" onclick="showScreen('list');renderList()">📋 Veure tots els verbs</button>
+      <button class="btn-ai" onclick="showScreen('ai');renderAIMenu()">✨ Activitats amb IA</button>
+      ${totalFails>0?`<div style="text-align:center;color:#444;font-size:12px">${totalFails} errors acumulats · ${fv.length} verbs pendents</div>`:""}
+    </div>
+  </div>`;
+}
+
+function setTense(t){tenseMode=t;renderMenu();}
+function setDir(d){direction=d;renderMenu();}
+
+// ══════════════════════════════════════════════════════════════════════════
+// GAME
+// ══════════════════════════════════════════════════════════════════════════
+function startGame(drill){
+  isDrill=drill;
+  deck = drill ? buildDrillDeck() : buildNormalDeck();
+  if(deck.length===0){renderMenu();return;}
+  deckIdx=0;flipped=false;
+  showScreen("game");renderCard();
+}
+function startDrill(){
+  if(failedVerbs().length===0)return;
+  startGame(true);
+}
+
+function renderCard(){
+  const el=document.getElementById("screen-game");
+  if(deckIdx>=deck.length){renderGameDone();return;}
+  const card=deck[deckIdx];
+  const isAr=card.dir==="ar→en";
+  const pct=(deckIdx/deck.length)*100;
+
+  let toastHtml="";
+  if(isDrill){
+    toastHtml=`<div style="margin-bottom:10px;padding:4px 14px;border-radius:20px;font-size:12px;letter-spacing:1px;border:1px solid #f87171;color:#f87171;text-transform:uppercase;display:inline-block">🔥 Mode errors</div>`;
+  }
+
+  const frontHtml = isAr
+    ? arabicBlock(card.verb)
+    : `<div style="text-align:center"><p style="font-size:34px;margin:0;font-style:italic;line-height:1.3">${card.verb.en}</p></div>`;
+
+  const backHtml = flipped
+    ? (isAr
+        ? `<div style="margin-top:20px;border-top:2px solid #2a2a2a;padding-top:18px;text-align:center"><p style="font-size:32px;margin:0;color:#f9d423;font-style:italic">${card.verb.en}</p></div>`
+        : `<div style="margin-top:24px;border-top:2px solid #2a2a2a;padding-top:22px">${arabicBlock(card.verb,"#f9d423")}</div>`)
+    : `<p style="color:#555;font-size:15px;text-align:center;margin-top:20px">toca per veure ${isAr?"la traducció":"l'àrab"}</p>`;
+
+  const btnsHtml = flipped
+    ? `<div style="display:flex;gap:16px;margin-top:22px"><button class="btn-no" onclick="answer(false)">✗</button><button class="btn-yes" onclick="answer(true)">✓</button></div>`
+    : `<div style="margin-top:24px;display:flex;gap:10px;justify-content:center">
+        <div style="width:10px;height:10px;border-radius:50%;background:#444"></div>
+        <div style="width:10px;height:10px;border-radius:50%;background:#f9d423;animation:pulse 1.5s infinite"></div>
+        <div style="width:10px;height:10px;border-radius:50%;background:#444"></div>
+       </div>`;
+
+  el.innerHTML=`
+  <div style="min-height:100vh;background:linear-gradient(135deg,#0f0c29,#302b63,#24243e);padding:24px 16px">
+    <div class="wrap" style="padding-left:0;padding-right:0">
+      <div style="display:flex;align-items:center;gap:14px;margin-bottom:16px">
+        <button onclick="showScreen('menu');renderMenu()" style="background:none;border:none;color:#888;font-size:28px;cursor:pointer">←</button>
+        <div class="grad-bar" style="flex:1"><div class="grad-bar-fill" style="width:${pct}%"></div></div>
+        <span style="color:#888;font-size:17px">${deckIdx+1}/${deck.length}</span>
+      </div>
+      <div style="text-align:center;margin-bottom:12px">${toastHtml}</div>
+      <div class="card" onclick="flipCard()" style="cursor:${flipped?'default':'pointer'}">
+        ${frontHtml}${backHtml}
+      </div>
+      ${btnsHtml}
+    </div>
+  </div>`;
+}
+
+function flipCard(){
+  if(!flipped){flipped=true;renderCard();}
+}
+
+function answer(correct){
+  const verb=deck[deckIdx].verb;
+  let graduated=false;
+  const e=stats[verb.en]||{fails:0,streak:0};
+  if(isDrill){
+    const newStreak=correct?e.streak+1:0;
+    if(newStreak>=3){graduated=true;stats[verb.en]={fails:0,streak:0};}
+    else stats[verb.en]={fails:correct?e.fails:e.fails+1,streak:newStreak};
+  } else {
+    stats[verb.en]={fails:correct?e.fails:e.fails+1,streak:correct?e.streak:0};
+  }
+  saveStats(stats);
+
+  if(graduated){
+    // brief flash
+    const el=document.getElementById("screen-game");
+    const toast=document.createElement("div");
+    toast.textContent=`🎓 "${verb.en}" graduada!`;
+    toast.style.cssText="position:fixed;top:20px;left:50%;transform:translateX(-50%);background:rgba(74,222,128,.2);border:1px solid #4ade80;border-radius:20px;padding:10px 20px;color:#4ade80;font-size:14px;z-index:999;animation:popIn .3s ease";
+    document.body.appendChild(toast);
+    setTimeout(()=>toast.remove(),1500);
+  }
+
+  deckIdx++;
+  flipped=false;
+  if(deckIdx>=deck.length)renderGameDone();
+  else renderCard();
+}
+
+function renderGameDone(){
+  document.getElementById("screen-game").innerHTML=`
+  <div style="min-height:100vh;background:linear-gradient(135deg,#0f0c29,#302b63,#24243e);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px">
+    <div style="font-size:72px">✅</div>
+    <h2 style="font-size:32px;margin:16px 0 8px;color:#f9d423">Sessió completada!</h2>
+    <p style="color:#aaa;font-size:18px">${deck.length} cartes fetes</p>
+    <button onclick="showScreen('menu');renderMenu()" style="margin-top:28px;padding:16px 36px;border-radius:16px;border:none;background:linear-gradient(90deg,#f9d423,#ff4e50);color:#1a1a2e;font-weight:700;font-size:18px;cursor:pointer">← Menú</button>
+  </div>`;
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+// VERB LIST
+// ══════════════════════════════════════════════════════════════════════════
+let listSort="fails", listSearch="";
+
+function renderList(){
+  const el=document.getElementById("screen-list");
+  let list=[...verbs]
+    .filter(v=>v.en.toLowerCase().includes(listSearch.toLowerCase())||v.present.includes(listSearch)||v.past.includes(listSearch))
+    .map(v=>({...v,fails:(stats[v.en]||{}).fails||0,streak:(stats[v.en]||{}).streak||0}))
+    .sort((a,b)=>listSort==="fails"?b.fails-a.fails:a.en.localeCompare(b.en));
+
+  const totalFails=list.reduce((s,v)=>s+v.fails,0);
+
+  let rows="";
+  list.forEach(v=>{
+    const failBadge=v.fails>0?`<span style="font-size:12px;background:rgba(248,113,113,.15);border:1px solid rgba(248,113,113,.4);border-radius:20px;padding:2px 10px;color:#f87171">✗ ${v.fails}</span>`:"";
+    const streakBadge=v.streak>0?`<span style="font-size:11px;color:#4ade80;border:1px solid #4ade80;border-radius:20px;padding:2px 8px">🔥 ${v.streak}/3</span>`:"";
+    const nameColor=v.fails>=5?"#f87171":v.fails>=2?"#fbbf24":"#ccc";
+    rows+=`<div style="background:rgba(255,255,255,.04);border:1px solid ${v.fails>0?"rgba(248,113,113,.25)":"rgba(255,255,255,.07)"};border-radius:16px;padding:14px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+        <span style="font-style:italic;font-size:15px;color:${nameColor}">${v.en}</span>
+        <div style="display:flex;gap:6px">${streakBadge}${failBadge}</div>
+      </div>
+      <div style="display:flex;gap:8px">
+        <div style="flex:1;background:rgba(249,212,35,.06);border-radius:10px;padding:8px;text-align:center">
+          <div style="font-size:10px;color:#f9d423;margin-bottom:4px">مضارع</div>
+          <div class="ar" style="font-size:26px;color:#fff">${v.present}</div>
+          <button onclick="speakAr(${JSON.stringify(v.present)});this.textContent='🔊';setTimeout(()=>this.textContent='🔈',1800)" style="margin-top:4px;background:none;border:none;color:#f9d423;font-size:15px;cursor:pointer">🔈</button>
+        </div>
+        <div style="flex:1;background:rgba(255,78,80,.06);border-radius:10px;padding:8px;text-align:center">
+          <div style="font-size:10px;color:#ff4e50;margin-bottom:4px">ماضي</div>
+          <div class="ar" style="font-size:26px;color:#fff">${v.past}</div>
+          <button onclick="speakAr(${JSON.stringify(v.past)});this.textContent='🔊';setTimeout(()=>this.textContent='🔈',1800)" style="margin-top:4px;background:none;border:none;color:#ff4e50;font-size:15px;cursor:pointer">🔈</button>
+        </div>
+      </div>
+    </div>`;
+  });
+
+  el.innerHTML=`
+  <div style="min-height:100vh;background:linear-gradient(135deg,#0f0c29,#302b63,#24243e);padding:24px 16px">
+    <div style="max-width:640px;margin:0 auto">
+      <div style="display:flex;align-items:center;gap:14px;margin-bottom:18px">
+        <button onclick="showScreen('menu');renderMenu()" style="background:none;border:none;color:#888;font-size:28px;cursor:pointer">←</button>
+        <h2 style="font-size:22px;background:linear-gradient(90deg,#f9d423,#ff4e50);-webkit-background-clip:text;-webkit-text-fill-color:transparent">Tots els verbs (${verbs.length})</h2>
+      </div>
+      <div style="display:flex;gap:10px;margin-bottom:16px">
+        <input type="text" value="${listSearch}" oninput="listSearch=this.value;renderList()" placeholder="Cerca..." style="flex:1;padding:11px 14px;border-radius:12px;border:1px solid #444;background:rgba(255,255,255,.06);color:#fff;font-size:16px">
+        <button onclick="listSort=listSort==='fails'?'alpha':'fails';renderList()" style="padding:11px 14px;border-radius:12px;border:1px solid #444;background:rgba(255,255,255,.06);color:#aaa;font-size:13px;cursor:pointer;white-space:nowrap">${listSort==="fails"?"⬇ Errors":"A–Z"}</button>
+      </div>
+      ${totalFails>0?`<div style="margin-bottom:14px;color:#555;font-size:13px;text-align:center">${totalFails} errors totals acumulats</div>`:""}
+      <div style="display:flex;flex-direction:column;gap:10px">${rows}</div>
+    </div>
+  </div>`;
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+// AI ACTIVITIES
+// ══════════════════════════════════════════════════════════════════════════
+const AI_ACTIVITIES=[
+  {id:"story", icon:"📖", title:"Conte generat", desc:"L'IA escriu un conte curt usant el teu vocabulari. Passa el cursor per cada paraula per veure la traducció."},
+  {id:"fill",  icon:"✏️", title:"Omple els buits", desc:"Frases en àrab amb un verb buit. Tries la forma correcta."},
+  {id:"translate", icon:"🔄", title:"Traducció", desc:"Frases per traduir català↔àrab. Desveles la solució quan vulguis."},
+  {id:"chat",  icon:"💬", title:"Conversa", desc:"Conversa en àrab amb la IA. Et corregeix i t'ajuda."},
+];
+
+function enterAISection(){
+  showScreen("ai");
+  if(!getApiKey()) renderApiKeyScreen();
+  else renderAIMenu();
+}
+
+function renderAIMenu(){
+  const cards=AI_ACTIVITIES.map(a=>`
+    <button onclick="startAIActivity('${a.id}')" style="padding:20px;border-radius:18px;border:1px solid rgba(167,139,250,.3);background:rgba(167,139,250,.07);text-align:left;cursor:pointer;width:100%;transition:background .2s" onmouseover="this.style.background='rgba(167,139,250,.15)'" onmouseout="this.style.background='rgba(167,139,250,.07)'">
+      <div style="font-size:28px;margin-bottom:8px">${a.icon}</div>
+      <div style="color:#a78bfa;font-weight:700;font-size:18px;margin-bottom:4px">${a.title}</div>
+      <div style="color:#888;font-size:14px;line-height:1.5">${a.desc}</div>
+    </button>`).join("");
+
+  document.getElementById("screen-ai").innerHTML=`
+  <div style="min-height:100vh;background:linear-gradient(135deg,#0f0c29,#302b63,#24243e);padding:24px 16px">
+    <div style="max-width:540px;margin:0 auto">
+      <div style="display:flex;align-items:center;gap:14px;margin-bottom:24px">
+        <button onclick="showScreen('menu');renderMenu()" style="background:none;border:none;color:#888;font-size:28px;cursor:pointer">←</button>
+        <h2 style="font-size:24px;background:linear-gradient(90deg,#a78bfa,#ec4899);-webkit-background-clip:text;-webkit-text-fill-color:transparent">✨ Activitats amb IA</h2>
+      </div>
+      <p style="color:#666;font-size:14px;margin-bottom:24px;line-height:1.6">La IA coneix tot el teu vocabulari dels apunts. Pot usar fins a 2 paraules noves per frase per ampliar el teu vocabulari en context.</p>
+      <div style="display:flex;flex-direction:column;gap:14px">${cards}</div>
+      <div style="margin-top:20px;text-align:center">
+        <button onclick="clearApiKey();renderApiKeyScreen()" style="background:none;border:none;color:#444;font-size:12px;cursor:pointer;text-decoration:underline">🔑 Canviar clau d'API</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+// ── API KEY ───────────────────────────────────────────────────────────────
+const API_KEY_STORAGE = "arabic_anthropic_key";
+function getApiKey(){ return localStorage.getItem(API_KEY_STORAGE)||""; }
+function saveApiKey(k){ localStorage.setItem(API_KEY_STORAGE, k.trim()); }
+function clearApiKey(){ localStorage.removeItem(API_KEY_STORAGE); }
+
+function renderApiKeyScreen(){
+  document.getElementById("screen-ai").innerHTML = `
+  <div style="min-height:100vh;background:linear-gradient(135deg,#0f0c29,#302b63,#24243e);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 20px">
+    <div style="max-width:440px;width:100%;text-align:center">
+      <div style="font-size:52px;margin-bottom:16px">🔑</div>
+      <h2 style="font-size:26px;color:#a78bfa;margin-bottom:12px">Clau d'API d'Anthropic</h2>
+      <p style="color:#888;font-size:14px;line-height:1.7;margin-bottom:8px">
+        Les activitats amb IA necessiten una clau d'API d'Anthropic.<br>
+        Aconsegueix-la gratuïtament a <a href="https://console.anthropic.com" target="_blank" style="color:#a78bfa">console.anthropic.com</a>
+      </p>
+      <p style="color:#555;font-size:12px;margin-bottom:24px">
+        La clau es guarda només al teu navegador i no és visible per ningú més.
+      </p>
+      <input type="password" id="api-key-input" placeholder="sk-ant-..." style="width:100%;padding:14px 16px;border-radius:14px;border:1px solid rgba(167,139,250,.4);background:rgba(255,255,255,.06);color:#fff;font-size:15px;margin-bottom:14px;font-family:monospace">
+      <button onclick="submitApiKey()" style="width:100%;padding:16px;border-radius:16px;border:none;background:linear-gradient(90deg,#7c3aed,#ec4899);color:#fff;font-weight:700;font-size:18px;cursor:pointer;margin-bottom:12px">Guardar i continuar</button>
+      <button onclick="showScreen('menu');renderMenu()" style="width:100%;padding:12px;border-radius:16px;border:2px solid #444;background:transparent;color:#666;font-size:15px;cursor:pointer">← Tornar al menú</button>
+    </div>
+  </div>`;
+  showScreen("ai");
+}
+
+function submitApiKey(){
+  const inp = document.getElementById("api-key-input");
+  const key = inp ? inp.value.trim() : "";
+  if(!key.startsWith("sk-")){
+    inp.style.border = "1px solid #f87171";
+    inp.placeholder = "Ha de començar per sk-ant-...";
+    return;
+  }
+  saveApiKey(key);
+  renderAIMenu();
+}
+
+async function callAI(system, user, history){
+  const key = getApiKey();
+  if(!key){ renderApiKeyScreen(); throw new Error("No API key"); }
+  const msgs = history ? history : [{role:"user",content:user}];
+  const resp = await fetch("https://api.anthropic.com/v1/messages",{
+    method:"POST",
+    headers:{
+      "Content-Type":"application/json",
+      "x-api-key": key,
+      "anthropic-version": "2023-06-01",
+      "anthropic-dangerous-direct-browser-access": "true"
+    },
+    body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:1500,system,messages:msgs})
+  });
+  if(resp.status===401){
+    clearApiKey();
+    renderApiKeyScreen();
+    throw new Error("Invalid API key");
+  }
+  const data=await resp.json();
+  if(data.error){ throw new Error(data.error.message); }
+  return data.content?.[0]?.text||"";
+}
+
+let currentActivity=null;
+let fillAnswers={};
+let fillChecked=false;
+let chatHistory=[];
+let aiContent=null;
+
+function showAILoading(title){
+  document.getElementById("screen-ai-activity").innerHTML=`
+  <div style="min-height:100vh;background:linear-gradient(135deg,#0f0c29,#302b63,#24243e);display:flex;flex-direction:column;align-items:center;justify-content:center">
+    <div style="font-size:48px;animation:pulse 1s infinite">✨</div>
+    <p style="color:#a78bfa;font-size:18px;margin-top:16px">Generant ${title}...</p>
+  </div>`;
+  showScreen("ai-activity");
+}
+
+async function startAIActivity(id){
+  currentActivity=id;
+  fillAnswers={};fillChecked=false;chatHistory=[];aiContent=null;
+  const act=AI_ACTIVITIES.find(a=>a.id===id);
+  showAILoading(act.title.toLowerCase());
+
+  try{
+    if(id==="story"){
+      const txt=await callAI(
+        `Ets un professor d'àrab. ${VOCAB_CONTEXT}
+Escriu un conte curt (6-8 frases) en àrab MSA. Usa principalment vocabulari conegut, però pots afegir MAX 2 paraules noves per frase si aporten valor.
+Per cada frase retorna les paraules individuals amb traducció per fer tooltips interactius.
+Respon ÚNICAMENT en JSON sense cap text addicional ni backticks markdown:
+{"sentences":[{"ar":"frase completa","ca":"traducció completa en català","words":[{"ar":"paraula","ca":"traducció al català"},...]},...]}
+IMPORTANT: "words" ha de tenir TOTES les paraules de la frase en ordre. Inclou partícules i preposicions com a entrades separades.`,
+        "Genera un conte curt i interessant sobre la vida quotidiana o un viatge."
+      );
+      aiContent=JSON.parse(txt.replace(/```json|```/g,"").trim());
+      renderStory();
+
+    }else if(id==="fill"){
+      const txt=await callAI(
+        `Ets un professor d'àrab. ${VOCAB_CONTEXT}
+Genera 5 frases en àrab on un verb (conjugat en present o passat هو/هي) és substituït per _____.
+Respon ÚNICAMENT en JSON sense cap text addicional ni backticks markdown:
+{"items":[{"ar":"frase amb _____","ca":"traducció amb _____ indicant el temps verbal","answer":"el verb correcte (1 paraula)","options":["opció1","opció2","opció3","opció4"]},...]}
+Les 4 opcions han de ser verbs plausibles però sols un correcte.`,
+        "Genera 5 exercicis d'omplir buits."
+      );
+      aiContent=JSON.parse(txt.replace(/```json|```/g,"").trim());
+      renderFill();
+
+    }else if(id==="translate"){
+      const txt=await callAI(
+        `Ets un professor d'àrab. ${VOCAB_CONTEXT}
+Genera 5 frases per traduir, alternant català→àrab i àrab→català.
+Respon ÚNICAMENT en JSON sense cap text addicional ni backticks markdown:
+{"items":[{"from":"frase original","to":"traducció correcta","dir":"ca→ar o ar→ca"},...]}`,
+        "Genera 5 frases de traducció variades."
+      );
+      aiContent=JSON.parse(txt.replace(/```json|```/g,"").trim());
+      renderTranslate();
+
+    }else if(id==="chat"){
+      const greeting=await callAI(
+        `Ets un interlocutor àrab amable. ${VOCAB_CONTEXT}
+Saluda l'estudiant en àrab, presenta't i fes una pregunta senzilla.
+Format: línia en àrab \n (traducció al català entre parèntesis)`,
+        "Inicia la conversa"
+      );
+      chatHistory=[{role:"assistant",text:greeting}];
+      renderChat();
+    }
+  }catch(e){
+    document.getElementById("screen-ai-activity").innerHTML=`
+    <div style="min-height:100vh;background:linear-gradient(135deg,#0f0c29,#302b63,#24243e);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px">
+      <div style="color:#f87171;font-size:18px;text-align:center">Error connectant amb la IA.<br>Comprova la connexió i torna-ho a intentar.</div>
+      <button onclick="showScreen('ai');renderAIMenu()" style="margin-top:24px;padding:14px 28px;border-radius:14px;border:none;background:#7c3aed;color:#fff;font-size:16px;cursor:pointer">← Tornar</button>
+    </div>`;
+  }
+}
+
+function aiHeader(title){
+  return `<div style="display:flex;align-items:center;gap:14px;margin-bottom:20px">
+    <button onclick="showScreen('ai');renderAIMenu()" style="background:none;border:none;color:#888;font-size:28px;cursor:pointer">←</button>
+    <h2 style="font-size:20px;color:#a78bfa">${title}</h2>
+    <button onclick="startAIActivity(currentActivity)" style="margin-left:auto;padding:8px 14px;border-radius:12px;border:1px solid rgba(167,139,250,.4);background:rgba(167,139,250,.1);color:#a78bfa;font-size:13px;cursor:pointer">🔄 Nova</button>
+  </div>`;
+}
+
+// ── STORY ──
+function renderStory(){
+  if(!aiContent||!aiContent.sentences){return;}
+  const rows=aiContent.sentences.map((s,i)=>{
+    // Build tooltip words
+    let wordsHtml="";
+    if(s.words&&s.words.length>0){
+      wordsHtml=s.words.map(w=>`<span class="tip-word" onclick="this.classList.toggle('tip-open')" onmouseenter="this.classList.add('tip-open')" onmouseleave="this.classList.remove('tip-open')">
+        <span class="ar" style="font-size:26px;color:#fff;border-bottom:1px dotted rgba(167,139,250,.5);padding-bottom:2px">${w.ar}</span>
+        <span class="tip">${w.ca}</span>
+      </span>`).join(" ");
+    }else{
+      wordsHtml=`<span class="ar" style="font-size:26px;color:#fff;line-height:1.6">${s.ar}</span>`;
+    }
+    return `<div style="background:rgba(255,255,255,.05);border:1px solid rgba(167,139,250,.2);border-radius:16px;padding:16px 18px">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:10px">
+        <div style="flex:1;direction:rtl;display:flex;flex-wrap:wrap;gap:6px 10px;justify-content:flex-start;align-items:baseline">${wordsHtml}</div>
+        <button onclick="speakAr(${JSON.stringify(s.ar)});this.textContent='🔊';setTimeout(()=>this.textContent='🔈',1800)" style="background:none;border:none;color:#555;font-size:20px;cursor:pointer;flex-shrink:0">🔈</button>
+      </div>
+      <div style="color:#888;font-size:14px;font-style:italic;border-top:1px solid rgba(255,255,255,.06);padding-top:8px">${s.ca}</div>
+    </div>`;
+  }).join("");
+
+  const fullTrans=aiContent.sentences.map((s,i)=>`<p style="color:#aaa;font-size:14px;margin:0 0 6px;font-style:italic;line-height:1.6">${i+1}. ${s.ca}</p>`).join("");
+
+  document.getElementById("screen-ai-activity").innerHTML=`
+  <div style="min-height:100vh;background:linear-gradient(135deg,#0f0c29,#302b63,#24243e);padding:24px 16px">
+    <div style="max-width:580px;margin:0 auto">
+      ${aiHeader("📖 Conte generat")}
+      <p style="color:#666;font-size:12px;text-align:center;margin-bottom:16px">💡 Toca cada paraula per veure la traducció</p>
+      <div style="display:flex;flex-direction:column;gap:14px">
+        ${rows}
+        <div style="background:rgba(124,58,237,.08);border:1px solid rgba(124,58,237,.25);border-radius:16px;padding:16px 18px">
+          <div style="font-size:12px;color:#a78bfa;letter-spacing:2px;text-transform:uppercase;margin-bottom:10px">📖 Traducció completa</div>
+          ${fullTrans}
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+// ── FILL ──
+function renderFill(){
+  if(!aiContent||!aiContent.items)return;
+  const rows=aiContent.items.map((item,i)=>{
+    const chosen=fillAnswers[i];
+    const isCorrect=chosen===item.answer;
+    const borderColor=fillChecked?(isCorrect?"rgba(74,222,128,.4)":"rgba(248,113,113,.4)"):"rgba(167,139,250,.2)";
+    const opts=item.options.map(opt=>{
+      let bg="rgba(255,255,255,.05)",border="1px solid #444",color="#aaa";
+      if(chosen===opt){bg="rgba(167,139,250,.2)";border="1px solid #a78bfa";color="#a78bfa";}
+      if(fillChecked&&opt===item.answer){bg="rgba(74,222,128,.15)";border="1px solid #4ade80";color="#4ade80";}
+      if(fillChecked&&chosen===opt&&chosen!==item.answer){bg="rgba(248,113,113,.15)";border="1px solid #f87171";color="#f87171";}
+      return `<button onclick="${fillChecked?"":`selectFill(${i},'${opt.replace(/'/g,"\'")}')`}" style="padding:8px 14px;border-radius:10px;border:${border};background:${bg};color:${color};font-family:Arial,sans-serif;font-size:18px;cursor:${fillChecked?"default":"pointer"};direction:rtl">${opt}</button>`;
+    }).join("");
+    return `<div style="background:rgba(255,255,255,.05);border:1px solid ${borderColor};border-radius:16px;padding:16px 18px">
+      <div class="ar" style="font-size:22px;color:#fff;margin-bottom:6px;line-height:1.6">${item.ar}</div>
+      <div style="color:#888;font-size:13px;margin-bottom:12px;font-style:italic">${item.ca}</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">${opts}</div>
+    </div>`;
+  }).join("");
+
+  const correctCount=Object.entries(fillAnswers).filter(([i,v])=>v===aiContent.items[i].answer).length;
+  const checkBtn=fillChecked
+    ? `<div style="text-align:center;padding:16px;border-radius:16px;background:rgba(167,139,250,.1);border:1px solid rgba(167,139,250,.3)"><span style="font-size:24px;color:#a78bfa">${correctCount} / ${aiContent.items.length} correctes</span></div>`
+    : `<button onclick="checkFill()" style="padding:16px;border-radius:16px;border:none;background:linear-gradient(90deg,#7c3aed,#ec4899);color:#fff;font-weight:700;font-size:18px;cursor:pointer;width:100%">Comprovar respostes</button>`;
+
+  document.getElementById("screen-ai-activity").innerHTML=`
+  <div style="min-height:100vh;background:linear-gradient(135deg,#0f0c29,#302b63,#24243e);padding:24px 16px">
+    <div style="max-width:580px;margin:0 auto">
+      ${aiHeader("✏️ Omple els buits")}
+      <div style="display:flex;flex-direction:column;gap:16px">
+        ${rows}
+        ${checkBtn}
+      </div>
+    </div>
+  </div>`;
+}
+
+function selectFill(i, opt){
+  fillAnswers[i]=opt;
+  renderFill();
+}
+function checkFill(){
+  fillChecked=true;
+  renderFill();
+}
+
+// ── TRANSLATE ──
+let translateRevealed={};
+function renderTranslate(){
+  if(!aiContent||!aiContent.items)return;
+  const rows=aiContent.items.map((item,i)=>{
+    const isAr=item.dir==="ar→ca";
+    const revealed=translateRevealed[i];
+    const fromHtml=isAr
+      ? `<div class="ar" style="font-size:26px;color:#fff;line-height:1.5">${item.from}</div>`
+      : `<div style="font-size:18px;color:#fff;line-height:1.5;font-style:italic">${item.from}</div>`;
+    const toHtml=revealed
+      ? (isAr
+          ? `<div style="font-size:16px;color:#f9d423;font-style:italic;margin-top:4px">${item.to}</div>`
+          : `<div class="ar" style="font-size:26px;color:#f9d423;line-height:1.5;margin-top:4px">${item.to}
+              <button onclick="speakAr(${JSON.stringify(item.to)});this.textContent='🔊';setTimeout(()=>this.textContent='🔈',1800)" style="background:none;border:none;color:#a78bfa;font-size:16px;cursor:pointer">🔈</button>
+             </div>`)
+      : `<button onclick="revealTranslate(${i})" style="margin-top:10px;padding:8px 16px;border-radius:10px;border:1px solid rgba(167,139,250,.4);background:rgba(167,139,250,.1);color:#a78bfa;font-size:14px;cursor:pointer">Veure traducció</button>`;
+    return `<div style="background:rgba(255,255,255,.05);border:1px solid rgba(167,139,250,.2);border-radius:16px;padding:16px 18px">
+      <div style="font-size:12px;color:#a78bfa;letter-spacing:2px;text-transform:uppercase;margin-bottom:8px">${item.dir}</div>
+      ${fromHtml}${toHtml}
+    </div>`;
+  }).join("");
+
+  document.getElementById("screen-ai-activity").innerHTML=`
+  <div style="min-height:100vh;background:linear-gradient(135deg,#0f0c29,#302b63,#24243e);padding:24px 16px">
+    <div style="max-width:580px;margin:0 auto">
+      ${aiHeader("🔄 Traducció")}
+      <div style="display:flex;flex-direction:column;gap:12px">${rows}</div>
+    </div>
+  </div>`;
+}
+function revealTranslate(i){
+  translateRevealed[i]=true;
+  renderTranslate();
+}
+
+// ── CHAT ──
+function renderChat(){
+  const msgs=chatHistory.map(m=>{
+    const isAI=m.role==="assistant";
+    if(isAI){
+      const lines=m.text.split("\n");
+      const arLine=`<div class="ar" style="font-size:20px;color:#fff;line-height:1.6">${lines[0]||""}</div>`;
+      const rest=lines.slice(1).map(l=>`<div style="color:#aaa;font-size:13px;font-style:italic">${l}</div>`).join("");
+      const speakBtn=lines[0]?`<button onclick="speakAr(${JSON.stringify(lines[0])});this.textContent='🔊';setTimeout(()=>this.textContent='🔈',1800)" style="background:none;border:none;color:#555;font-size:16px;cursor:pointer;margin-top:4px">🔈</button>`:"";
+      return `<div style="display:flex;justify-content:flex-start">
+        <div style="max-width:85%;padding:14px 16px;border-radius:18px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1)">
+          ${arLine}${rest}${speakBtn}
+        </div>
+      </div>`;
+    }else{
+      return `<div style="display:flex;justify-content:flex-end">
+        <div style="max-width:85%;padding:14px 16px;border-radius:18px;background:rgba(124,58,237,.3);border:1px solid rgba(124,58,237,.5)">
+          <span style="color:#e2e8f0;font-size:16px">${m.text}</span>
+        </div>
+      </div>`;
+    }
+  }).join("");
+
+  const quickBtns=["مَرْحَبَا! أَنَا عُمَر","كَيْفَ حَالُك؟","لَا أَفْهَمُ، كَرِّرْ مِنْ فَضْلِك","شُكْرًا!"]
+    .map(s=>`<button onclick="setChatInput(${JSON.stringify(s)})" class="ar" style="padding:6px 12px;border-radius:10px;border:1px solid #444;background:rgba(255,255,255,.04);color:#888;font-size:13px;cursor:pointer;direction:rtl">${s}</button>`)
+    .join("");
+
+  document.getElementById("screen-ai-activity").innerHTML=`
+  <div style="min-height:100vh;background:linear-gradient(135deg,#0f0c29,#302b63,#24243e);padding:24px 16px;display:flex;flex-direction:column">
+    <div style="max-width:580px;margin:0 auto;width:100%;flex:1;display:flex;flex-direction:column">
+      ${aiHeader("💬 Conversa")}
+      <div style="flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:12px;margin-bottom:16px;max-height:55vh">${msgs}
+        ${chatHistory.length>0&&chatHistory[chatHistory.length-1].role==="user"?'<div style="color:#a78bfa;font-size:14px;text-align:center;padding:8px;animation:pulse 1s infinite">✨ Escrivint...</div>':""}
+      </div>
+      <div style="display:flex;gap:10px;margin-bottom:10px">
+        <input type="text" id="chat-input" placeholder="Escriu en àrab o català..." onkeydown="if(event.key==='Enter')sendChat()" style="flex:1;padding:14px 16px;border-radius:14px;border:1px solid rgba(167,139,250,.4);background:rgba(255,255,255,.06);color:#fff;font-size:16px;font-family:Arial,sans-serif">
+        <button onclick="sendChat()" style="padding:14px 18px;border-radius:14px;border:none;background:linear-gradient(90deg,#7c3aed,#ec4899);color:#fff;font-size:20px;cursor:pointer">➤</button>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">${quickBtns}</div>
+    </div>
+  </div>`;
+}
+
+function setChatInput(text){
+  const inp=document.getElementById("chat-input");
+  if(inp)inp.value=text;
+}
+
+async function sendChat(){
+  const inp=document.getElementById("chat-input");
+  if(!inp||!inp.value.trim())return;
+  const userText=inp.value.trim();
+  chatHistory.push({role:"assistant",text:""});// placeholder
+  chatHistory.pop();
+  chatHistory.push({role:"user",text:userText});
+  renderChat(); // show user message + loading
+
+  const histForAI=chatHistory.map(m=>({role:m.role==="assistant"?"assistant":"user",content:m.text}));
+  try{
+    const reply=await callAI(
+      `Ets un interlocutor àrab amable i pacient. ${VOCAB_CONTEXT}
+Conversa en àrab usant vocabulari conegut. Si l'estudiant comet errors, corregeix-los amablement.
+Format per cada missatge teu: primera línia en àrab, segona línia traducció al català entre parèntesis. Si cal, afegeix: 💡 Correcció: ...`,
+      null,
+      histForAI
+    );
+    chatHistory.push({role:"assistant",text:reply});
+  }catch(e){
+    chatHistory.push({role:"assistant",text:"Error de connexió. Torna-ho a intentar."});
+  }
+  renderChat();
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════════════════════════════════
+// Preload voices
+if(window.speechSynthesis){
+  window.speechSynthesis.getVoices();
+  window.speechSynthesis.addEventListener("voiceschanged",()=>window.speechSynthesis.getVoices());
+}
+renderMenu();
+</script>
+</body>
+</html>
