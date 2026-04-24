@@ -598,7 +598,7 @@ function renderAIMenu(){
       <p style="color:#666;font-size:14px;margin-bottom:24px;line-height:1.6">La IA coneix tot el teu vocabulari dels apunts. Pot usar fins a 2 paraules noves per frase per ampliar el teu vocabulari en context.</p>
       <div style="display:flex;flex-direction:column;gap:14px">${cards}</div>
       <div style="margin-top:20px;text-align:center">
-        <button onclick="clearApiKey();renderApiKeyScreen()" style="background:none;border:none;color:#444;font-size:12px;cursor:pointer;text-decoration:underline">🔑 Canviar clau de Gemini</button>
+        <button onclick="clearApiKey();renderApiKeyScreen()" style="background:none;border:none;color:#444;font-size:12px;cursor:pointer;text-decoration:underline">🔑 Canviar clau d'OpenAI</button>
       </div>
     </div>
   </div>`;
@@ -615,15 +615,14 @@ function renderApiKeyScreen(){
   <div style="min-height:100vh;background:linear-gradient(135deg,#0f0c29,#302b63,#24243e);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 20px">
     <div style="max-width:440px;width:100%;text-align:center">
       <div style="font-size:52px;margin-bottom:16px">🔑</div>
-      <h2 style="font-size:26px;color:#a78bfa;margin-bottom:12px">Clau d'API de Google Gemini</h2>
+      <h2 style="font-size:26px;color:#a78bfa;margin-bottom:12px">Clau d'API d'OpenAI</h2>
       <p style="color:#888;font-size:14px;line-height:1.7;margin-bottom:8px">
-        Les activitats amb IA usen Google Gemini, que té una capa <strong style="color:#4ade80">gratuïta</strong>.<br>
-        Aconsegueix la clau a <a href="https://aistudio.google.com/apikey" target="_blank" style="color:#a78bfa">aistudio.google.com/apikey</a>
+        Les activitats amb IA usen <strong style="color:#fff">GPT-4o mini</strong> d'OpenAI.<br>
+        Aconsegueix la clau a <a href="https://platform.openai.com/api-keys" target="_blank" style="color:#a78bfa">platform.openai.com/api-keys</a>
       </p>
-      <p style="color:#555;font-size:12px;margin-bottom:24px">
-        La clau es guarda només al teu navegador i no és visible per ningú més.
-      </p>
-      <input type="password" id="api-key-input" placeholder="AIza..." style="width:100%;padding:14px 16px;border-radius:14px;border:1px solid rgba(167,139,250,.4);background:rgba(255,255,255,.06);color:#fff;font-size:15px;margin-bottom:14px;font-family:monospace">
+      <p style="color:#555;font-size:12px;margin-bottom:6px">Cada activitat costa aprox. 0,01€ · amb 5€ tens per mesos.</p>
+      <p style="color:#555;font-size:12px;margin-bottom:24px">La clau es guarda al teu navegador i no és visible per ningú més.</p>
+      <input type="password" id="api-key-input" placeholder="sk-..." style="width:100%;padding:14px 16px;border-radius:14px;border:1px solid rgba(167,139,250,.4);background:rgba(255,255,255,.06);color:#fff;font-size:15px;margin-bottom:14px;font-family:monospace">
       <button onclick="submitApiKey()" style="width:100%;padding:16px;border-radius:16px;border:none;background:linear-gradient(90deg,#7c3aed,#ec4899);color:#fff;font-weight:700;font-size:18px;cursor:pointer;margin-bottom:12px">Guardar i continuar</button>
       <button onclick="showScreen('menu');renderMenu()" style="width:100%;padding:12px;border-radius:16px;border:2px solid #444;background:transparent;color:#666;font-size:15px;cursor:pointer">← Tornar al menú</button>
     </div>
@@ -634,9 +633,9 @@ function renderApiKeyScreen(){
 function submitApiKey(){
   const inp = document.getElementById("api-key-input");
   const key = inp ? inp.value.trim() : "";
-  if(key.length < 20){
+  if(!key.startsWith("sk-")){
     inp.style.border = "1px solid #f87171";
-    inp.placeholder = "Enganxa la clau de Google AI Studio...";
+    inp.placeholder = "Ha de començar per sk-...";
     return;
   }
   saveApiKey(key);
@@ -646,37 +645,30 @@ function submitApiKey(){
 async function callAI(system, user, history){
   const key = getApiKey();
   if(!key){ renderApiKeyScreen(); throw new Error("No API key"); }
-
-  // Build Gemini contents array
-  let contents = [];
-  if(history){
-    history.forEach(m => {
-      contents.push({role: m.role === "assistant" ? "model" : "user", parts:[{text: m.content}]});
-    });
-  } else {
-    contents = [{role:"user", parts:[{text: user}]}];
-  }
-
-  const resp = await fetch(
-    `https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent?key=${key}`,
-    {
-      method:"POST",
-      headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({
-        system_instruction: {parts:[{text: system}]},
-        contents: contents,
-        generationConfig: {maxOutputTokens: 1500, temperature: 0.7}
-      })
-    }
-  );
-  if(resp.status===400||resp.status===403){
+  const msgs = history ? history : [{role:"user", content:user}];
+  const resp = await fetch("https://api.anthropic.com/v1/messages", {
+    method:"POST",
+    headers:{
+      "Content-Type":"application/json",
+      "x-api-key": key,
+      "anthropic-version": "2023-06-01",
+      "anthropic-dangerous-direct-browser-access": "true"
+    },
+    body:JSON.stringify({
+      model:"claude-haiku-4-5-20251001",
+      max_tokens:1500,
+      system:system,
+      messages:msgs
+    })
+  });
+  if(resp.status===401){
     clearApiKey();
     renderApiKeyScreen();
-    throw new Error("Invalid API key");
+    throw new Error("Clau invàlida. Comprova-la a console.anthropic.com");
   }
   const data = await resp.json();
   if(data.error){ throw new Error(data.error.message); }
-  return data.candidates?.[0]?.content?.parts?.[0]?.text || "";
+  return data.content?.[0]?.text || "";
 }
 
 let currentActivity=null;
