@@ -656,7 +656,7 @@ async function callAI(system, user, history){
     },
     body:JSON.stringify({
       model:"claude-haiku-4-5-20251001",
-      max_tokens:1500,
+      max_tokens:2048,
       system:system,
       messages:msgs
     })
@@ -696,11 +696,10 @@ async function startAIActivity(id){
     if(id==="story"){
       const txt=await callAI(
         `Ets un professor d'àrab. ${VOCAB_CONTEXT}
-Escriu un conte curt (6-8 frases) en àrab MSA. Usa principalment vocabulari conegut, però pots afegir MAX 2 paraules noves per frase si aporten valor.
-Per cada frase retorna les paraules individuals amb traducció per fer tooltips interactius.
-Respon ÚNICAMENT en JSON sense cap text addicional ni backticks markdown:
-{"sentences":[{"ar":"frase completa","ca":"traducció completa en català","words":[{"ar":"paraula","ca":"traducció al català"},...]},...]}
-IMPORTANT: "words" ha de tenir TOTES les paraules de la frase en ordre. Inclou partícules i preposicions com a entrades separades.`,
+Escriu un conte de 4 frases curtes en àrab MSA. Vocabulari conegut + màx 1 paraula nova per frase.
+Respon NOMÉS en JSON, sense text ni backticks:
+{"sentences":[{"ar":"frase","ca":"traducció catalana","words":[{"ar":"mot","ca":"trad"},...]}]}
+Totes les paraules de cada frase han d'aparèixer a "words" en ordre.`,
         "Genera un conte curt i interessant sobre la vida quotidiana o un viatge."
       );
       aiContent=JSON.parse(txt.replace(/```json|```/g,"").trim());
