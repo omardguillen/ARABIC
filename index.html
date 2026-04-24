@@ -748,10 +748,15 @@ Format: línia en àrab \n (traducció al català entre parèntesis)`,
       renderChat();
     }
   }catch(e){
+    if(e.message === "No API key" || e.message === "Invalid API key") return;
+    console.error("AI Error:", e);
     document.getElementById("screen-ai-activity").innerHTML=`
     <div style="min-height:100vh;background:linear-gradient(135deg,#0f0c29,#302b63,#24243e);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px">
-      <div style="color:#f87171;font-size:18px;text-align:center">Error connectant amb la IA.<br>Comprova la connexió i torna-ho a intentar.</div>
-      <button onclick="showScreen('ai');renderAIMenu()" style="margin-top:24px;padding:14px 28px;border-radius:14px;border:none;background:#7c3aed;color:#fff;font-size:16px;cursor:pointer">← Tornar</button>
+      <div style="color:#f87171;font-size:18px;text-align:center;margin-bottom:12px">Error connectant amb la IA</div>
+      <div style="color:#666;font-size:13px;text-align:center;max-width:340px;word-break:break-all;margin-bottom:20px;font-family:monospace">${e.message}</div>
+      <button onclick="startAIActivity(currentActivity)" style="margin-bottom:10px;padding:14px 28px;border-radius:14px;border:none;background:#7c3aed;color:#fff;font-size:16px;cursor:pointer">🔄 Tornar a intentar</button>
+      <button onclick="clearApiKey();renderApiKeyScreen()" style="padding:10px 20px;border-radius:12px;border:1px solid #444;background:transparent;color:#888;font-size:14px;cursor:pointer">🔑 Canviar clau</button>
+      <button onclick="showScreen('ai');renderAIMenu()" style="margin-top:8px;padding:10px 20px;border-radius:12px;border:none;background:transparent;color:#555;font-size:13px;cursor:pointer">← Tornar</button>
     </div>`;
   }
 }
