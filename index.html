@@ -598,7 +598,7 @@ function renderAIMenu(){
       <p style="color:#666;font-size:14px;margin-bottom:24px;line-height:1.6">La IA coneix tot el teu vocabulari dels apunts. Pot usar fins a 2 paraules noves per frase per ampliar el teu vocabulari en context.</p>
       <div style="display:flex;flex-direction:column;gap:14px">${cards}</div>
       <div style="margin-top:20px;text-align:center">
-        <button onclick="clearApiKey();renderApiKeyScreen()" style="background:none;border:none;color:#444;font-size:12px;cursor:pointer;text-decoration:underline">🔑 Canviar clau d'OpenAI</button>
+        <button onclick="clearApiKey();renderApiKeyScreen()" style="background:none;border:none;color:#444;font-size:12px;cursor:pointer;text-decoration:underline">🔑 Canviar clau d'Anthropic</button>
       </div>
     </div>
   </div>`;
@@ -615,12 +615,12 @@ function renderApiKeyScreen(){
   <div style="min-height:100vh;background:linear-gradient(135deg,#0f0c29,#302b63,#24243e);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 20px">
     <div style="max-width:440px;width:100%;text-align:center">
       <div style="font-size:52px;margin-bottom:16px">🔑</div>
-      <h2 style="font-size:26px;color:#a78bfa;margin-bottom:12px">Clau d'API d'OpenAI</h2>
+      <h2 style="font-size:26px;color:#a78bfa;margin-bottom:12px">Clau d'API d'Anthropic</h2>
       <p style="color:#888;font-size:14px;line-height:1.7;margin-bottom:8px">
-        Les activitats amb IA usen <strong style="color:#fff">GPT-4o mini</strong> d'OpenAI.<br>
-        Aconsegueix la clau a <a href="https://platform.openai.com/api-keys" target="_blank" style="color:#a78bfa">platform.openai.com/api-keys</a>
+        Les activitats amb IA usen <strong style="color:#fff">Claude Haiku</strong> d'Anthropic.<br>
+        Aconsegueix la clau a <a href="https://console.anthropic.com/settings/keys" target="_blank" style="color:#a78bfa">console.anthropic.com</a>
       </p>
-      <p style="color:#555;font-size:12px;margin-bottom:6px">Cada activitat costa aprox. 0,01€ · amb 5€ tens per mesos.</p>
+      <p style="color:#555;font-size:12px;margin-bottom:6px">La clau es guarda al navegador. Cada activitat costa menys de 0,001€.</p>
       <p style="color:#555;font-size:12px;margin-bottom:24px">La clau es guarda al teu navegador i no és visible per ningú més.</p>
       <input type="password" id="api-key-input" placeholder="sk-..." style="width:100%;padding:14px 16px;border-radius:14px;border:1px solid rgba(167,139,250,.4);background:rgba(255,255,255,.06);color:#fff;font-size:15px;margin-bottom:14px;font-family:monospace">
       <button onclick="submitApiKey()" style="width:100%;padding:16px;border-radius:16px;border:none;background:linear-gradient(90deg,#7c3aed,#ec4899);color:#fff;font-weight:700;font-size:18px;cursor:pointer;margin-bottom:12px">Guardar i continuar</button>
@@ -696,10 +696,34 @@ async function startAIActivity(id){
     if(id==="story"){
       const txt=await callAI(
         `Ets un professor d'àrab. ${VOCAB_CONTEXT}
-Escriu un conte de 4 frases curtes en àrab MSA. Vocabulari conegut + màx 1 paraula nova per frase.
+Escriu un conte curt de 4 frases en àrab MSA. Vocabulari conegut + màx 1 paraula nova per frase.
 Respon NOMÉS en JSON, sense text ni backticks:
-{"sentences":[{"ar":"frase","ca":"traducció catalana","words":[{"ar":"mot","ca":"trad"},...]}]}
-Totes les paraules de cada frase han d'aparèixer a "words" en ordre.`,
+{"sentences":[{"ar":"frase","ca":"traducció catalana"}]}
+
+VARIETAT MÀXIMA: cada vegada tria aleatòriament UN tema d'aquesta llista i segueix-lo estrictament:
+1. Drama familiar: conflicte entre germans, secret descobert, discussió sopar
+2. Viatge inesperat: perd passaport, tren equivocat, tempesta imprevista
+3. Situació còmica: malentès ridícul, accident domèstic, confusió de noms
+4. Misteri quotidià: objecte desaparegut, veí estrany, soroll nocturn
+5. Primera vegada: primer dia feina, primer viatge sol, primera cuina
+6. Mercat i regateix: preu injust, producte defectuós, venedor insistent
+7. Visita mèdica: símptomes estranys, metge confós, remei sorprenent
+8. Amor i malentesos: cita nerviosa, carta no enviada, retrobament
+9. Escola i exàmens: trampa que falla, professor inesperat, resultat sorpresa
+10. Tecnologia i problemes: telèfon perdut, internet cau, error informàtic
+11. Esport i competició: entrenament dur, lesió, victòria o derrota inesperada
+12. Cuina desastrosa: recepta mal seguida, ingredient equivocat, foc a la cuina
+13. Reunió de feina: presentació catastròfica, client difícil, error de darrera hora
+14. Natura i aventura: excursió perduda, animal inesperat, canvi de temps
+15. Festa i celebració: convidat no esperat, regal equivocat, discurs desastrós
+16. Transport i retards: autobús perdut, taxi estrany, cotxe espatllat
+17. Veïns i comunitat: soroll molest, paquet equivocat, favor inesperat
+18. Compres en línia: producte diferent, retorn complicat, sorpresa a la caixa
+19. Memòria i oblit: aniversari oblidat, nom que no recorda, claus perdudes
+20. Somni i realitat: despertar confós, somni que semblava real, deja vu
+
+Noms àrabs variats: Ahmad, Fatima, Khalid, Layla, Yusuf, Sara, Hassan, Nour, Mariam, Tariq, Zainab, Bilal, Rania, Samira, Karim.
+El final pot ser feliç, sorprenent, ambigu, còmic o trist. MAI previsible.`,
         "Genera un conte curt i interessant sobre la vida quotidiana o un viatge."
       );
       aiContent=JSON.parse(txt.replace(/```json|```/g,"").trim());
@@ -709,9 +733,15 @@ Totes les paraules de cada frase han d'aparèixer a "words" en ordre.`,
       const txt=await callAI(
         `Ets un professor d'àrab. ${VOCAB_CONTEXT}
 Genera 5 frases en àrab on un verb (conjugat en present o passat هو/هي) és substituït per _____.
-Respon ÚNICAMENT en JSON sense cap text addicional ni backticks markdown:
-{"items":[{"ar":"frase amb _____","ca":"traducció amb _____ indicant el temps verbal","answer":"el verb correcte (1 paraula)","options":["opció1","opció2","opció3","opció4"]},...]}
-Les 4 opcions han de ser verbs plausibles però sols un correcte.`,
+Respon ÚNICAMENT en JSON sense cap text addicional ni backticks:
+{"items":[{"ar":"frase amb _____","ca":"traducció indicant el temps verbal","answer":"verb correcte","options":["op1","op2","op3","op4"]}]}
+
+VARIETAT: cada vegada barreja contextos molt diferents:
+- Situacions: casa, feina, escola, viatge, mercat, hospital, restaurant, carrer, família, esport
+- Temps verbals: alterna present i passat de manera impredictible
+- Subjectes: ell, ella, persones amb noms àrabs variats
+- Dificultat: barreja verbs simples (كتب، ذهب) amb verbs més complexos (استيقظ، اعتقد، استطاع)
+- Que les 4 opcions siguin plausibles semànticament però solo una correcta gramaticalment o contextual`,
         "Genera 5 exercicis d'omplir buits."
       );
       aiContent=JSON.parse(txt.replace(/```json|```/g,"").trim());
@@ -720,9 +750,16 @@ Les 4 opcions han de ser verbs plausibles però sols un correcte.`,
     }else if(id==="translate"){
       const txt=await callAI(
         `Ets un professor d'àrab. ${VOCAB_CONTEXT}
-Genera 5 frases per traduir, alternant català→àrab i àrab→català.
-Respon ÚNICAMENT en JSON sense cap text addicional ni backticks markdown:
-{"items":[{"from":"frase original","to":"traducció correcta","dir":"ca→ar o ar→ca"},...]}`,
+Genera 5 frases per traduir, alternant català→àrab i àrab→català de manera variada.
+Respon ÚNICAMENT en JSON sense cap text addicional ni backticks:
+{"items":[{"from":"frase original","to":"traducció correcta","dir":"ca→ar o ar→ca"}]}
+
+VARIETAT MÀXIMA - cada vegada usa temes completament diferents:
+- Contexts: família, viatge, menjar, salut, feina, escola, temps, compres, esport, emocions
+- Tipus de frase: afirmativa, negativa, pregunta, exclamació
+- Temps verbals: barreja present, passat i futur (سـ + present)
+- Complexitat: de simples (Va al mercat) a compostes (Volia viatjar però estava malalt)
+- Expressions útils: frases fetes, expressions de cortesia, opinions`,
         "Genera 5 frases de traducció variades."
       );
       aiContent=JSON.parse(txt.replace(/```json|```/g,"").trim());
@@ -931,9 +968,19 @@ async function sendChat(){
   const histForAI=chatHistory.map(m=>({role:m.role==="assistant"?"assistant":"user",content:m.text}));
   try{
     const reply=await callAI(
-      `Ets un interlocutor àrab amable i pacient. ${VOCAB_CONTEXT}
-Conversa en àrab usant vocabulari conegut. Si l'estudiant comet errors, corregeix-los amablement.
-Format per cada missatge teu: primera línia en àrab, segona línia traducció al català entre parèntesis. Si cal, afegeix: 💡 Correcció: ...`,
+      `Ets un interlocutor àrab amable, pacient i variat. ${VOCAB_CONTEXT}
+Conversa en àrab usant vocabulari conegut. Si l'estudiant comet errors, corregeix-los breument i continua.
+Format: primera línia en àrab, segona línia traducció al català. Si cal: 💡 Correcció: ...
+
+VARIETAT: cada conversa tingues un rol diferent. Pots ser:
+- Un amic àrab que explica el seu dia
+- Un venedor al mercat
+- Un metge a la consulta
+- Un company de classe
+- Un hoteler que rep turistes
+- Un cuiner que explica una recepta
+- Un viatger que demana informació
+Introdueix-te breument al primer missatge i mantén el rol durant tota la conversa.`,
       null,
       histForAI
     );
