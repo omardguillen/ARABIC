@@ -54,6 +54,7 @@ input[type=text]{outline:none;font-family:Arial,sans-serif}
 <div id="screen-list" class="screen"></div>
 <div id="screen-ai" class="screen"></div>
 <div id="screen-ai-activity" class="screen"></div>
+<div id="screen-syn" class="screen"></div>
 
 <script>
 // ── DATA ──────────────────────────────────────────────────────────────────
@@ -219,6 +220,41 @@ const verbs = [
   { en: "to kill time (waste time)", present: "يَقْتُلُ الوَقْتَ", past: "قَتَلَ الوَقْتَ" },
   { en: "to relax / unwind (soul)", present: "يَرُوحُ عَنِ النَّفْسِ", past: "رَاحَ عَنِ النَّفْسِ" },
   { en: "to fish / hunt", present: "يَصِيدُ", past: "صَادَ" },
+  // New verbs from latest notes
+  { en: "to drive (a vehicle)", present: "يَسُوق", past: "سَاقَ" },
+  { en: "to live / be alive", present: "يَعِيش", past: "عَاشَ" },
+  { en: "to allow / permit", present: "يَسْمَح", past: "سَمَحَ" },
+  { en: "to pay", present: "يَدْفَع", past: "دَفَعَ" },
+  { en: "to try out / taste", present: "يُجَرِّب", past: "جَرَّبَ" },
+  { en: "to receive", present: "يَتَسَلَّم", past: "تَسَلَّمَ" },
+  { en: "to hand over / deliver", present: "يُسَلِّم", past: "سَلَّمَ" },
+  { en: "to call / contact", present: "يَتَّصِل", past: "اتَّصَلَ" },
+  { en: "to joke", present: "يَمْزَح", past: "مَزَحَ" },
+  { en: "to announce", present: "يُعْلِن", past: "أَعْلَنَ" },
+  { en: "to board / go up", present: "يَصْعَد", past: "صَعَدَ" },
+  { en: "to shave", present: "يَحْلِق", past: "حَلَقَ" },
+  { en: "to win / earn", present: "يَرْبَح", past: "رَبِحَ" },
+  { en: "to lose (match)", present: "يَخْسَر", past: "خَسِرَ" },
+  { en: "to pass by", present: "يَمُرّ", past: "مَرَّ" },
+  { en: "to move away", present: "يَبْتَعِد", past: "ابْتَعَدَ" },
+  { en: "to stop doing sth", present: "يَتَوَقَّف عَن", past: "تَوَقَّفَ عَن" },
+  { en: "to fill", present: "يَمْلَأ", past: "مَلَأَ" },
+  { en: "to encourage", present: "يُشَجِّع", past: "شَجَّعَ" },
+  { en: "to welcome", present: "يَسْتَقْبِل", past: "اسْتَقْبَلَ" },
+  { en: "to pilgrimage (hajj)", present: "يَحُجّ", past: "حَجَّ" },
+  { en: "to kill", present: "يَقْتُل", past: "قَتَلَ" },
+  { en: "to book / reserve", present: "يَحْجِز", past: "حَجَزَ" },
+  { en: "to extract / take out", present: "يَسْتَخْرِج", past: "اسْتَخْرَجَ" },
+  { en: "to mean / signify", present: "يَعْنِي", past: "عَنَى" },
+  { en: "to follow / continue", present: "يَتَّبِع / يَتَابَع", past: "تَابَعَ" },
+  // New verbs from notebook (pages 68-69)
+  { en: "to use", present: "يَسْتَعْمِلُ", past: "اسْتَعْمَلَ" },
+  { en: "to close / lock", present: "يُقْفِلُ", past: "أَقْفَلَ" },
+  { en: "to send", present: "يُرْسِلُ", past: "أَرْسَلَ" },
+  { en: "to hate", present: "يَكْرَهُ", past: "كَرِهَ" },
+  // New verbs from book Units 10/13/16
+  { en: "to rain", present: "يُمْطِرُ", past: "أَمْطَرَ" },
+  { en: "to do umra (minor pilgrimage)", present: "يَعْتَمِرُ", past: "اعْتَمَرَ" },
 ];
 
 const VOCAB_CONTEXT = `
@@ -270,7 +306,179 @@ DIRECCIONS I LLOC: أَمَام، خَلْف، عَلَى اليَمِين، ع�
 EXPRESSIONS I CONNECTORS: مَرْحَبَا، أَهْلًا وَسَهْلًا، شُكْرًا، مَعَ السَّلَامَة، مِنْ فَضْلِك، عَفْوًا، جَزَاكَ اللَّه خَيْرًا، آسِف، أَيْضًا، دَائِمًا، أَبَدًا، أَحْيَانًا، رُبَّمَا، لَكِن، بَلْ، هَكَذَا، أَخِيرًا، أَوَّلًا، فِي البِدَايَة، بَعْد ذَلِك، ثُمَّ، لِكَي، بَدَلًا مِن، مُنْذُ، حَتَّى الآن، بِسَبَب، لِمَاذَا، بِسُرْعَة، تَقْرِيبًا، جِدًّا، قَلِيل، كَثِير، كُلّ، بَعْض، أَكْثَر مِن، أَقَلّ، فَرْد/أَفْرَاد، النَّاس، بَيْن، مِن قَبْل، بَعْد، قَبْل، الآن، لَيْسَ هُنَاك
 
 PREGUNTES: مَاذَا؟، مَن؟، أَيْن؟، مَتَى؟، كَيْف؟، كَمْ؟، لِمَاذَا؟، أَيّ؟، هَل؟، مِنْ أَيْن؟، إِلَى أَيْن؟
+
+TRANSPORT I TRÀNSIT (nou): سَائِق، يَسُوق/قَادَ، قَانُون/قَوَانِين، مَوْقِف/مَوَاقِف، سَيَّارَات الأُجْرَة، السَّكَن الجَامِعِي، إِدَارَة الجَامِعَة، القِيَادَة، ازْدِحَام، النَّقْل العَامّ، زَحْمَة، الوُصُول، عِنْدَمَا، إِذَا، بِصَرَاحَة، عَادَة، أَحْسَن، وَسَط، مُحَبَّط، مَمْنُوع، كُحُول، حَضَارَات، دِين/أَدْيَان، دَرَّاجَة، دَرَّاجَة نَارِيَّة، قَرْيَة
+
+VIATGES I AEROPORT (nou): تَذْكِرَة/تَذَاكِر، الحَجْز، تَأْشِيرَة، إِجْرَاءَات، اسْتِخْرَاج، اسْتِلَام، إِكْمَال، يَسْتَخْرِج، تَعْلِيم، بِلِت/تَذْكِرَة، تَأْشِيرَة، عُنْوَان، يَتَعَلَّم، يُعَلِّم، يَشْرَح، مَثْنَى، ضَمَائِر، النَّمُوذَج، مُتْجَر، بَقَّالَة، الرِّسَالَة، السَّكَن، تَعْنِي/يَعْنِي، مَاذَا يَعْنِي، حَرْف الجَرّ، وُصُول، يَصِل/وَصَل، الحُجْرَة، مَعْنَى، فَقَط، التَّالِي/القَادِم، تَصْوِير، رِحْلَة، أَمَاكِن، عَلَيْك، يَلْزَم، السِّيَاحَة، دَرَجَة، صَفّ/دُرُوس، دَرَجَة السِّيَاحِيَّة، الدَّرَجَة الأُولَى، زِيَارَة، يُقْلِع/أَقْلَعَ، إِقْلَاع، عَلَى الأَقَلّ، يُؤَكِّد/أَكَّد، مَدْخَل، مَخْرَج، حَقَائِب، حَقِيبَة، بِكُلّ سُرُور، جَمِيع/كُلّ، لَوْ سَمَحْت، رَافَقَتْك السَّلَامَة، المُوَظَّف، المَضِيف، قَبْل الإِقْلَاع بِسَاعَة، قَبْل السَّفَر بِيَوْم
+
+MENJAR AVANÇAT (nou): مَأْكُولَات بَحْرِيَّة، نَادِي، لَحْم خِنْزِير، مُفَضَّل، لَحْم الأَبْقَار، لَحْم الأَغْنَام، نَوْع، أَخَر/أُخْرَى، نَفْس، يَرُدّ/يُجِيب، مَلأَ/يَمْلَأ، بِطَاقَة، صَالَة، إِتِّجَاه، في الخُطُوط، في الخَارِج/الدَّاخِل، سُكَّرِيَّات، خُضْرَاوَات، فَوَاكِه، فَاكِهَة، خُضَار، قَلْب، فَاكِهَة
+
+SALUT AVANÇAT (nou): الضَّغْط، نَتِيجَة، دَم، زِيَادَة الوَزْن، كُلْيَة، سُكَّرِيَّات، خُضْرَاوَات، سَلِيم، يَفْحَص، مَغْط، نَتِيجَة، حِمْيَة، الدُّهُون، مَشْغُول، يَكْفِي، حَسَن، حَالَة، حَالَتُك، فَقَد، أَتَّبِع، يَتَحَدَّث، غَاضِب، يُعَالِج، بِدُون، عَدَد، يَقِلّ، يَكْثُر، وُجْهَة نَظَر، شِفَاك اللَّه، أَمِين، يَقِيس، مُرْتَفِع/مُنْخَفِض، يَتَزَنَّخ، إِجَابَة، يُجِيب/يَرُدّ، فَقَط، الضَّغْط، نَتِيجَة
+
+ADJECTIUS I CONNECTORS NOUS: قَوِيّ، ضَعِيف، إِذَا، مُحَادَثَة، الحِوَار، شَارِع/شَوَارِع، وَسِيلَة، مُزْدَحِم، يُمْكِنُك، نِهَايَة، يَعِيش، مَعَاهِد، رُفُوف، مَقَاعِد، سُرُر، مَوْ ذَلِك، هَؤُلَاء، حَيَوَان الأَلِيف، أَنْوَاع، طَبْعًا، رَائِع، لَاحِقًا، تُضِيع، خِلَال، خُطَّة، هَاتِف، يَمُرّ، النِّدَاء، تَتَأَخَّر، يُعْلِن/أَعْلَن، بَوَّابَة، يَصْعَد/صَعَد، العَفْش، سَلَّم/يُسَلِّم، سَمِع، فَحَص، مِثْل، مُكَيِّف، يَمْزَح، خِزَانَة، عِرْق، صُوَّر، أَلاَ
+
+ESPORT I AFICIONS NOUS: صَاحِيَك، لَا عَيْب، سَنَرْتَاح، المَنْطِقَة، المُبَارَاة، فَرِيق، يَخْسَر/خَسِر، يَرْبَح/رَبِح، اللَّاعِب/اللَّاعِبُون، لَن يَكُون لَدَيَّ وَقْت، أَشْعُر/أَحِسّ، يَشْكُو، رُبَّمَا، جَار، مَهْرَجَان، حَيَاة، خُطَط/خُطَّة، هَاتِف، يَمُرّ، النِّدَاء، يَتَأَخَّر، يُعْلِن، بَوَّابَة
+
+VIDA I SOCIETAT: عَامِل، يَحْتَاج، مُفِيد، العَقْل، الجِسْم، هَدَف، يَقْتُل، حَدِيقَة، قَضَاء الوَقْت، مُتْعَة، فَائِدَة، الشِّعْر، أَنْشِطَة، عَنَاء، مَوْ ذَلِك، هَؤُلَاء، صَبْر، لَمُدَّة، لِي، يُصْبِح، أَخَذَ/يَأْخُذ، عَادِي، بَرْنَامَج، نِظَام، فَرَاشِي/لِيت، التَّقَارِين، تَمْرِين، يَشْجَع، بَسِيط، يَلْبَس، تَأَمُّل، نَفْسِي، مَوْعِد، عَادَة، المَحَطَّة، المُفْتَرَض، عَلَى الأَقَل
+
+FAMÍLIA I RELACIONS AMPLIADES: العَائِلَات، العَائِلَة، أَطْلَبُون، فَانْجُو، الأَقَل، حَوْل، رَغْم، لَم يَصِل أَبٌ مِن البِنْتَيْن إِلَى الهَدَف، أَشْيَاء، يَزِيد وَزْن، جُبْن، عَسَل، مُرَبَّى، النَّشَوِيَّات، وَرَغْم ذَلِك، يَنْقُص وَزْن، أَمْر، فَهُمَا، يَنْجَح، يَصِل، يَتَشَابَه، يَخْتَلِف، بَاخُذ/يَظَلّ، لَيْس لَدَيْهَا
+
+SALUT MENTAL I EMOCIONS: مَوْ ذَلِك، غَاضِب، صَبْر، حَالَة، قَلِق، المَعْنَى، أَشْيَاء، العِمَارَة، سَيِّئ، يَتَوَقَّف عَن، صِحَّة، اشْعُر بِالسَّعَادَة/بِالحُزْن، يَقْتَرِب، يَبْتَعِد، إِذَن، المُتْحَف، الفَأَس، بِالجَوّ، بِالبَحْر، القَاصِمَة، يُسَاعِد، جَوَّالَة، المَتَاحِف، أَبْنَاء، يَحُجّ، تَارِيخ، وَضَعَ، القَادِم، الَّذِين/اللَّتِي، يَصِل، السُّكَّن، السُّرُور، دُرُوس، فُقَرَاء، فَقِير
+
+GRAMÀTICA I ESTUDI: عُنْوَان، مُحَادَثَة، إِنِّي، الحِوَار، سَأُجَرِّبُهَا، مُحَبَّط، يَشْتَمِع/يَسْمَع/يَسْمَح، حَضَارَة/حَضَارَات، جَرَّب/يُجَرِّب، أَنْوَاع حُرُوف، فِعْل، كَمَا، مُتْجَر، بَقَّالَة، الرِّسَالَة، يَعْنِي/تَعْنِي، مَاذَا يَعْنِي هَذَا، حَرْف الجَرّ، لَهُ→لِلسَّفَر، لَهَا→إِلَى المَدْرَسَة، فِيه/فِيهَا، عَنْه/عَنْهَا، إِلَيْه/إِلَيْهَا، بِهَا/بِه
+
+VOCABULARI LLIBRETA (pàgines 68-69, nou):
+
+TRANSPORT AMPLIAT: مُوَاصَلَات (transport públic), دَرَّاجَة نَارِيَّة (moto), خَالِيَة (buit/lliure), لِأَنَّ (perquè), لِأَنَّنِي (perquè jo), المَلْعَب (estadi), تَمْرِين (exercici), نَادِي (gimnàs/club), الأَمْر (l'assumpte/ordre)
+
+HOBBIES NOUS: الطَّبْخ (cuinar), أَلْعَابُ الفِيدْيُو (videojocs), الزِّرَاعَة (jardineria), الغِنَاء (cantar), تَسَلُّقُ الجِبَال (senderisme/escalada), شِرَاء (comprar, substantiu)
+
+MOVIMENT I DIRECCIÓ: الصُّعُود (pujar/ascendir), الهُبُوط (baixar/descendir), يُقْفِلُ/أَقْفَلَ (tancar/bloquejar), المَنَاظِر (vistes/paisatges), مَانِع (obstacle/problema), يَسْتَعْمِلُ/اسْتَعْمَلَ (usar/utilitzar), يُرْسِلُ/أَرْسَلَ (enviar)
+
+EXPRESSIONS NOVES: مَا رَأْيُكَ؟ (quina és la teva opinió?), لَا مَانِعَ (no em fa res/d'acord), عُطْلَة نِهَايَة الأُسْبُوع (cap de setmana), بِالمُقَارَنَة مَعَ (en comparació amb)
+
+SINÒNIMS I ANTÒNIMS: مُرَادِف (sinònim), ضِدّ (antònim/oposat), عَكْس (contrari/invers), قَبِيح (lleig), صَحِّيّ (saludable), يَكْرَهُ/كَرِهَ (odiar)
+
+TEMPS METEOROLÒGIC (Unit 10): يُمْطِرُ (plou), السَّمَاء (cel), فَصْلُ الخَرِيف (tardor), فَصْلُ الشِّتَاء (hivern), فَصْلُ الرَّبِيع (primavera), فَصْلُ الصَّيْف (estiu), بَارِد (fred), دَافِئ (tebi), سَاخِن (calent/bullent), حَارّ (calorós), مُعْتَدِل (temperat), مُبْتَلّ (mullat), المِعْطَف (abric), المِظَلَّة (paraigua), الجَوّ (el temps/clima), دَرَجَة الحَرَارَة (temperatura), تَحْتَ الصِّفْر (sota zero), حَرّ (calor), بَرْد (fred subst.), فِي الخَارِج (fora/a l'exterior), السُّوق (el mercat), خَيْمَة (tenda de campanya), سَجَّادَة (catifa), البَرّ (el desert/terra), شَاطِئ (platja), يُحْضِرُ (portar/preparar), يَبْقَى (quedar-se), يَقْضِي (passar temps), غَداً (demà), اللَّيْلَة (aquesta nit), فِكْرَة طَيِّبَة (bona idea)
+
+VIATGE I AEROPORT (Unit 13): المُوَظَّف (l'empleat), المُسَافِر (el viatger), أَيّ خِدْمَة (en qué puc ajudar?), حَجْز (reserva), تَأْكِيد الحَجْز (confirmar la reserva), الخُطُوط السُّعُودِيَّة (Saudi Airlines), الخُطُوط الإِنْدُونِيسِيَّة (Indonesian Airlines), تَذْكِرَة/تَذَاكِر (bitllet/s), جَوَاز السَّفَر (passaport), تَأْشِيرَة الخُرُوج (visat de sortida), تَأْشِيرَة الدُّخُول (visat d'entrada), يُغَادِرُ (marxar/sortir), الرِّحْلَة رَقْم (vol número), الطَّائِرَة (avió), أُحْضِرُ إِلَى المَطَار (vaig a l'aeroport), رِحْلَة سَعِيدَة (bon viatge!), الضَّابِط (agent/oficial), قَادِم (que ve/procedent de), مَالِيزِيّ (malai), كَشْمِيرِيّ (caixmirí), العُمْرَة (umra/peregrinació menor), المَسْجِد الحَرَام (la Mesquita Sagrada), إِقَامَة طَيِّبَة (bona estada), عُمْرَة مَقْبُولَة (umra acceptada), فَقَدْتُ حَقِيبَتِي (he perdut la maleta), مَا لَوْنُ الحَقِيبَة؟ (de quin color és la maleta?), لَوْن (color), اِفْتَحِ الحَقِيبَة (obre la maleta), فُنْدُق (hotel), يُقِيم (allotjar-se), زِيَارَة (visita), حَقِيبَة (maleta), يَفْتَح (obrir), يَفْقِد (perdre), شَمَال (nord), جَنُوب (sud), شَرْق (est), غَرْب (oest), الشَّرْق الأَوْسَط (Orient Mitjà)
+
+VACANCES (Unit 16): اقْتَرَبَتِ العُطْلَة (s'acosta la vacança), مَا رَأْيُكَ (quina és la teva opinió?), نُسَافِرُ إِلَى (viatgem a), لِنَرَى (per veure), نَهْر (riu), النِّيل (el Nil), مُوَافِق (d'acord/estic d'acord), بِالجَوّ (per aire/en avió), بِالبَحْر (per mar/en vaixell), السَّفَر بِالجَوّ غَالٍ (viatjar en avió és car), السَّفَر بِالبَحْر رَخِيص (viatjar per mar és barat), كَمْ يَوْمًا سَنَقْضِي (quants dies passarem), سَبْعَة أَيَّام (set dies), إِنْ شَاءَ اللَّه (si Déu vol), مَزْرَعَة (granja), مَكْتَبَات (biblioteques), العَاصِمَة (la capital), المَتَاحِف (museus), الجِبَال (les muntanyes), جَوَّالَة (excursionistes/scouts), المَسْجِد النَّبَوِيّ (la Mesquita del Profeta), نَعْتَمِرُ (fem la umra), نَحُجُّ (fem el hajj), عُطْلَة الصَّيْف (vacances d'estiu), عُطْلَة سَعِيدَة (bones vacances!), القَرْيَة (el poble), المَكَان هَادِئ (el lloc és tranquil), الهَوَاء نَقِيّ (l'aire és pur), بَلَدِي (el meu país)
 `;
+
+const VOCAB_SHORT = `
+L'estudiant es diu Omar, aprèn àrab MSA, nivell A2-B1 parlant català/castellà/anglès/francès.
+
+VERBS PRINCIPALS: يَكْتُبُ/كَتَبَ، يَذْهَبُ/ذَهَبَ، يَأْكُلُ/أَكَلَ، يَشْرَبُ/شَرِبَ، يَنَامُ/نَامَ، يَسْتَيْقِظُ/اسْتَيْقَظَ، يَعْمَلُ/عَمِلَ، يَدْرُسُ/دَرَسَ، يَتَكَلَّمُ/تَكَلَّمَ، يَسْمَعُ/سَمِعَ، يَنْظُرُ/نَظَرَ، يَرَى/رَأَى، يُرِيدُ/أَرَادَ، يَسْتَطِيعُ/اسْتَطَاعَ، يَكُونُ/كَانَ، يَجْلِسُ/جَلَسَ، يَقُومُ/قَامَ، يَدْخُلُ/دَخَلَ، يَخْرُجُ/خَرَجَ، يَأْتِي/أَتَى، يَعُودُ/عَادَ، يَبْدَأُ/بَدَأَ، يَنْتَهِي/انْتَهَى، يُحِبُّ/أَحَبَّ، يَفْهَمُ/فَهِمَ، يَتَعَلَّمُ/تَعَلَّمَ، يَشْعُرُ/شَعَرَ، يُسَافِرُ/سَافَرَ، يَزُورُ/زَارَ، يَشْتَرِي/اشْتَرَى، يَبِيعُ/بَاعَ، يَسْأَلُ/سَأَلَ، يُجِيبُ/أَجَابَ، يُحَاوِلُ/حَاوَلَ، يَنْجَحُ/نَجَحَ، يَفْشَلُ/فَشِلَ، يَضْحَكُ/ضَحِكَ، يَبْكِي/بَكَى، يَغْضَبُ/غَضِبَ، يَفْرَحُ/فَرِحَ، يَخَافُ/خَافَ، يَنْسَى/نَسِيَ، يَتَذَكَّرُ/تَذَكَّرَ، يَدْفَعُ/دَفَعَ، يَأْخُذُ/أَخَذَ، يُعْطِي/أَعْطَى، يَطْلُبُ/طَلَبَ، يَسْمَحُ/سَمَحَ، يَمْزَحُ/مَزَحَ، يُجَرِّبُ/جَرَّبَ، يَرْكَبُ/رَكِبَ، يَسُوقُ/سَاقَ، يَعِيشُ/عَاشَ
+
+VOCABULARI: أَب، أُمّ، أَخ، أُخْت، زَوْج، زَوْجَة، أَطْفَال، بَيْت، غُرْفَة، مَطْبَخ، شُقَّة، مَطَار، مَحَطَّة، مَطْعَم، مَدْرَسَة، مَسْجِد، سُوق، مُسْتَشْفَى، مَاء، قَهْوَة، شَاي، خُبْز، أُرُز، لَحْم، دَجَاج، فَاكِهَة، خُضَار، سَيَّارَة، حَافِلَة، قِطَار، طَائِرَة، تَذْكِرَة، جَوَاز سَفَر، هَاتِف، كِتَاب، قَلَم، امْتِحَان، طَبِيب، دَوَاء، صُدَاع، سَعِيد، حَزِين، مُتَوَتِّر، كَبِير، صَغِير، جَمِيل، صَعْب، سَهْل، سَرِيع، بَطِيء، أَمْس، اليَوْم، غَداً، شُكْرًا، مِنْ فَضْلِك، مَعَ السَّلَامَة، أَيْن؟، كَيْف؟، لِمَاذَا؟، مَتَى؟
+
+COMPRES (Unit 9): رِيَال، دِينَار، مُعْجَم، كِتَابُ القَوَاعِد، كِتَابُ القِرَاءَة، طَبَقُ بَيْض، عُلْبَةُ مِلْح، طَمَاطِم، بَصَل، خِيَار، بُنّ، سُكَّر، ثَوْب/أَثْوَاب، قُمْصَان، قَمِيص، قِسْم، المُشْتَرِي، البَائِع، مَرْأَة، المَطْلُوب، تَفَضَّل (خُذْ)، هُنَا، بِكَمْ؟
+
+PERSONES I LLOCS (Unit 11): سَعِيد، عُمْرَة، أَصْدِقَاء، هُنَاك، مُدِيرُ الشَّرِكَة، البَحْر، إِزْدِحَام، هَادِئ، نَقِيّ، تَلَوُّث، مُشْكِلَة، قِطَار، أَسْوَاق، شَرِكَات، هَوَاء، ضَوْضَاء، نِصْفُ سَاعَة، قَرْيَة، جِنْسِيَّة يَمَنِيَّة، جَوَازُ السَّفَر اليَمَنِيّ
+
+HOBBIES (Unit 12): هِوَايَة، كُتُبٌ إِسْلَامِيَّة، كُتُبٌ عِلْمِيَّة، مَجَلَّات، السَّفَر، قِرَاءَة، كُرَةُ القَدَم، طَابِع، السِّبَاحَة، الفُرُوسِيَّة، مَعْرَض، جَنَاح، صُحُف، خَطُّ النَّسْخ، خَطُّ الرُّقْعَة، التَّدْبِيرُ المَنْزِلِيّ، جَمْعُ الطَّوَابِع، آيَات، الخِيَاطَة، مُفِيدَة، أَهْوَى (أُحِبّ)
+
+SALUT (Unit 15): طَبِيبُ الأَسْنَان، طَبِيبُ الأَنْفِ وَالأُذُنِ وَالحَنْجَرَة، أَلَم شَدِيد، مَوْعِد، إِسْعَاف، يُقَابِل، يَنْصَح، تَقْرِيرٌ طِبِّيّ، يُصَاب، تَغَيَّب، ارْتِفَاع، نَتِيجَة، ضَغْط، يَفْحَص، سَلِيم، سُكَّرِيَّات، زِيَادَةُ الوَزْن، كُلْيَة، صَدْر، قَلْب، فَوَاكِه، خُضْرَاوَات، يَقِيسُ الضَّغْط، الحَمْدُ لِلَّه، أَنَا بِخَيْر
+VOCABULARI LLIBRETA (pàgines 1-10, registre complet):
+
+FAMÍLIA I RELACIONS: شَجَرَة العَائِلَة (arbre genealògic), ما جِنْسِيَّتُك؟ (de quina nacionalitat ets?), صُورَة (foto/pintura), أُسْرَة (família nuclear)
+
+PROFESSIONS ESCOLA: طَالِب (estudiant m), طَالِبَة (estudiant f), أُسْتَاذ/أُسْتَاذَة (professor/a universitari), مُدَرِّس/مُدَرِّسَة (professor/a escola), مُتَرْجِم/مُتَرْجِمَة (traductor/a)
+
+MESQUITA I RELIGIÓ: القُرْآن، مُصَلَّى (sala de pregària), أَذَان (crida a la pregària), الفَجْر (primera pregària), هَيَّا (va! vinga!), هَيَّا بِنَا (anem!), هَيَّا إِلَى المَسْجِد, وُضُوء (ablució), يَتَوَضَّأ (fer ablució)
+
+PRONOMS POSSESSIUS COMPLETS: كِتَابِي (el meu), كِتَابُكَ/كِتَابُكِ (el teu m/f), كِتَابُهُ/كِتَابُهَا (el seu m/f), كِتَابُنَا (el nostre), كِتَابُكُمْ/كِتَابُكُنَّ (el vostre m/f), كِتَابُهُمْ/كِتَابُهُنَّ (el seu pl m/f)
+
+CASA AMPLIADA: الدَّوْر الخَامِس (5è pis), أَثَاث (mobles), غُرْفَة جُلُوس (sala d'estar), غُرْفَة نَوْم (dormitori), سِتَارَة (cortina), المُسْتَأْجِر (llogater), المُؤَجِّر (propietari), كَمْ غُرَف؟ (quantes habitacions?), هَل تَسْكُن فِي بَيْت؟, فِي أَيّ دَوْر؟ (a quin pis?), مِنْ فَضْلِك (si us plau)
+
+EXPRESSIONS ÚTILS: أَيّ خِدْمَة؟ (en qué puc ajudar?), الخِدْمَة (servei), مَاذَا تَفْعَل؟ (que fas?), أَيّ لَوْن تُفَضِّل؟ (quin color prefereixes?), بِكَمْ هَذَا؟ (quant costa?), مِنْ أَيْن هَذَا الكِتَاب؟ (d'on és aquest llibre?)
+
+TEMPS AMPLI: بَعْد غَد (demà passat), أَوَّل أَمْس (avant-ahir), يَوْم العَمَل (dia de feina), يَوْم العُطْلَة (dia de festa/vacances), أَسْتَيْقِظُ الفَجْر (em desperto al alba)
+
+TASQUES DOMÈSTIQUES: طَبَق/أَطْبَاق (plat/plats), مَلَابِس (roba), يَكْنُس (escombrar), يَغْسِل (rentar), يَكْوِي (planxar)
+
+MEDIA I COMUNICACIÓ: كِتَاب/صَحِيفَة (diari), تِلْفَاز (televisió), يُشَاهِد (mirar/veure), مُتَأَخِّر (tard), مُبَكِّر (aviat/d'hora), الصَّبَاح (matí)
+
+ADJECTIUS QUANTITAT: فَرْد/أَفْرَاد (individu/individus), أَيْضًا (també), جِدًّا (molt/bastant), كَثِير (molt), قَلِيل (poc)
+
+ORDINALS COMPLETS m/f: الأَوَّل/الأُولَى (1r/1a), الثَّانِي/الثَّانِيَة (2n/2a), الثَّالِث/الثَّالِثَة (3r/3a), الرَّابِع/الرَّابِعَة (4t/4a), الخَامِس/الخَامِسَة (5è/5a), السَّادِس/السَّادِسَة (6è/6a), السَّابِع/السَّابِعَة (7è/7a), الثَّامِن/الثَّامِنَة (8è/8a), التَّاسِع/التَّاسِعَة (9è/9a), العَاشِر/العَاشِرَة (10è/10a)
+
+RESTAURANT I MENJADOR: وَجْبَة/وَجَبَات (menjar/plat), فُطُور (esmorzar), غَدَاء (dinar), عَشَاء (sopar), سَلَطَة (amanida), شَرَاب (beguda), طَعَام (menjar en general), عِنَب (raïm), تَمْر/تُمُور (dàtil/s), مَائِدَة (taula parada), جَوْعَان (famolenc), ضَيْف/ضُيُوف (convidat/s), المَضِيفَة (amfitriona/hostessa), شَيْئًا آخَر (alguna cosa més?), لَدَيْنَا (tenim)
+
+IMPERATIUS (conjugació completa): اكْتُبْ (escriu! m), اكْتُبِي (escriu! f), اكْتُبَا (escriviu! 2), اكْتُبُوا (escriviu! pl m), اكْتُبْنَ (escriviu! pl f), أَفْضَل (prefereixo/és millor)
+
+PARTICIPIS ÀRABS: مُسَافِر (viatjant), دَارِس (estudiant), كَاتِب (escrivint), ذَاهِب (anant), خَارِج (sortint/fora), مُرْسَل (enviat), مُذَكِّر (recordatori), مُعَلِّم (professor/ensenyant)
+
+EXPRESSIONS RELIGIOSES: جَزَاكَ اللَّه خَيْرًا (que Déu et recompens), آسِف (ho sento), الحَمْدُ لِلَّه (gràcies a Déu), مُنَبِّه (alarma), اللَّيْل (nit), فِكْرَة طَيِّبَة (bona idea!)
+
+NEGACIÓ: لَيْسَ (no és, m), لَيْسَت (no és, f), لَسْتُ (no sóc)
+
+MENJAR AVANÇAT: مُرَبَّى (melmelada), زُبْدَة (mantequilla), حَلْوَى (dolços/postres), عَدَس (llenties), فُول (faves), كَعْك (galetes/pastes)
+
+COS HUMÀ COMPLET: جِسْمُ الإِنْسَان (cos humà), رَأْس (cap), عَيْن (ull), أَنْف (nas), فَم (boca), أُذُن (orella), رَقَبَة (coll), شَعْر (cabell), صَدْر (pit), يَد (mà), ذِرَاع (braç), إِصْبَع (dit), بَطْن (ventre), فَخِذ (cuixa), سَاق (cama), كَعْب (taló), قَدَم (peu), رُكْبَة (genoll)
+
+VOCABULARI ADDICIONAL (revisió completa de totes les fotos):
+
+CONVERSA I DIÀLEG: الحِوَار (diàleg), مُحَادَثَة (conversa), إِنِّي (jo, expressió), وَسِيلَة (mitjà/manera), مُزْدَحِم (concorregut/ple), يُمْكِنُك (pots/és possible), وَدَّعُوا بَعْضَهُم البَعْض (es van acomiadar els uns als altres), نِهَايَة (final/fi)
+
+ESCOLA I UNIVERSITAT AMPLIADA: سِيَاسَة (política), مَوَادّ دِرَاسِيَّة (matèries escolars), مَنْهَج (currículum), جَدْوَل دِرَاسِيّ (horari escolar), حِصَّة (classe/lliçó), لَوْحَة/سَبُّورَة (pissarra), كُلِّيَّة الطِّبّ (facultat de medicina), كُلِّيَّة التَّرْبِيَة (facultat d'educació), الحَاسُوب (ordinador), الرِّيَاضِيَّات (matemàtiques), العُلُوم (ciències), الثَّقَافَة الإِسْلَامِيَّة (cultura islàmica), امْتِحَان (examen), أُسْبُوع/أَسَابِيع (setmana/es), كَانَ (era/estava, passat), يَكُون (ser/estar, present), أُسْتَاذُنَا (el nostre professor)
+
+PROFESSIONS MÈDIQUES: طَيَّار (pilot), مُمَرِّض/مُمَرِّضَة (infermer/a), صَيْدَلِيّ (farmacèutic), صَيْدَلِيَّة (farmàcia), هَنْدَسَة (enginyeria), الطِّبّ (medicina), المِهْنَة (professió), الصِّحَّة (salut com a camp), تَمْرِيض (infermeria)
+
+HABITATGE I BARRI: حَيّ (barri), رَقْم (número), شُقَّة (pis/apartament), الجَامِعَة (universitat), المَطَار (aeroport), جَمِيلَة (bonica), يَسْكُن/تَسْكُن (viu/habita), تَفَضَّل (si us plau/endavant), الدَّوْر الخَامِس (5è pis), يَدْخُل (entra)
+
+TENER (3 formes): لَدَيَّ/لَدَيْك/لَدَيْهِ/لَدَيْنَا (tenir - íntim), لِي/لَكَ/لَهُ/لَنَا (tenir - neutral), عِنْدِي/عِنْدَك/عِنْدَهُ/عِنْدَنَا (tenir - físic/disponible)
+
+CINEMA I MEDIA: الاقْتِصَاد (economia), مُصَوِّر سِيْنِمَائِيّ (director de fotografia), السِّيْنِمَا (cinema), فِيلْم/أَفْلَام (pel·lícula/es), إِعْلَان (anunci/publicitat), تَصْوِير (fotografia/filmació), الغُرُور (supèrbia/vanitat), مُخْتَلِفَة (diferent f), إِخْوَة/أَخَوَات (germans/germanes), أُغْنِيَة/أَغَانِي (cançó/cançons), ضَوْء (llum), عَقْلِيَّة (mentalitat)
+
+COMPARATIUS I OPINIONS: أَظُنّ (crec/penso), يَعْتَقِد (creu/pensa), المُقَارَنَة (comparació), تَشْبِيه (semblança), تَنْظِيف (neteja), الأَهْرَامَات (les piràmides), خَضْرَة (vegetació), بَلَد (país), أَكْثَر مِنْ (més que), أَقَلّ (menys), باهِي (bo/genial, dialect), مِنَ القِيَادَة (de la conducció/lideratge)
+
+COMPRES AMPLIADES: المَطْلُوب (el total/el que es demana), البَاقِي (el canvi/el que queda), بِكَمْ؟ (quant val?), هَدِيَّة (regal), المَحَلّ/المُتْجَر (botiga), سُوق (mercat), الخُضْرَاوَات (verdures, pl), تَفَضَّل/خُذْ (agafa/aquí tens), رِيَال (riyal), دِينَار (dinar)
+
+SALUT AMPLIADA: الضَّغْط (pressió arterial), دَم (sang), الكُلْيَة (ronyó), صَدْر (pit), القَلْب (cor), حِمْيَة (dieta), الدُّهُون (grasses), سُكَّرِيَّات (sucres/dolços), خُضْرَاوَات (verdures), فَوَاكِه (fruites), زِيَادَة الوَزْن (augment de pes), مُرْتَفِع/مُنْخَفِض (alt/baix), سَلِيم (sa/intacte), نَتِيجَة (resultat), يَقِيسُ الضَّغْط (mesurar la pressió), الحَمْدُ لِلَّه القَلْب سَلِيم (gràcies a Déu el cor és sa), مُشْغُول (ocupat), يَكْفِي (és suficient), حَالَة (estat/condició), حَالَتُك (el teu estat de salut), غَاضِب (enfadat), مُتْعَب (cansat), صَبْر (paciència)
+
+VIATGE I TRANSPORT AMPLIATS: جَوَاز السَّفَر (passaport), تَأْشِيرَة (visat), إِجْرَاءَات (procediments), الخُطُوط (aerolínies), تَأْشِيرَة الخُرُوج (visat de sortida), تَأْشِيرَة الدُّخُول (visat d'entrada), المَدْخَل (entrada), المَخْرَج (sortida), حَقِيبَة/حَقَائِب (maleta/es), بِكُلّ سُرُور (amb molt de gust), قَبْل الإِقْلَاع بِسَاعَة (1h abans del vol), قَبْل السَّفَر بِيَوْم (1 dia abans), رَافَقَتْك السَّلَامَة (vés amb Déu), يَصْعَد (pujar/embarcar), بَوَّابَة (porta/gate), يُعْلِن/أَعْلَن (anunciar), النِّدَاء (crida/anunci)
+
+NATURA I MEDI AMBIENT: طَقْس/جَوّ (temps meteorològic), دَرَجَة الحَرَارَة (temperatura), فَصْل الصَّيْف (estiu), فَصْل الرَّبِيع (primavera), فَصْل الخَرِيف (tardor), فَصْل الشِّتَاء (hivern), شَاطِئ (platja), البَرّ (terra/desert), جَبَل (muntanya), حَدِيقَة (jardí/parc), البَحْر (mar), مَطَر (pluja), شَمْس (sol), قَمَر (lluna), سَمَاء (cel), حَارّ/بَارِد/دَافِئ/مُعْتَدِل (calent/fred/tebi/temperat), غَائِم (ennuvolat), مِظَلَّة (paraigua), خَيْمَة (tenda de campanya)
+
+HOBBIES AMPLIATS: هِوَايَة (afició), كُتُب رِوَايَات (novel·les), كُتُب عِلْمِيَّة (llibres científics), مَجَلَّة/مَجَلَّات (revista/es), الفُرُوسِيَّة (equitació), جَمْع الطَّوَابِع (col·lecció de segells), خَطُّ النَّسْخ/خَطُّ الرُّقْعَة (cal·ligrafia àrab), التَّدْبِير المَنْزِلِيّ (gestió de la llar), الخِيَاطَة (costura), آيَات (versets coranics), أَهْوَى (estimo/m'encanta), أَحَادِيث (hadits), مَعْرَض (exposició), جَنَاح (secció/ala), صُحُف (diaris), لُغَات (idiomes)
+
+CONNECTORS AVANÇATS: بَيْنَمَا (mentre), بَدَلًا مِنْ (en lloc de), حَتَّى الآن (fins ara), مُنْذُ (des de/fa), أَبَدًا (mai/sempre), دَائِمًا (sempre), رُبَّمَا (potser), لِكَي (perquè/per tal que), أَخِيرًا (finalment), فِي البِدَايَة (al principi), بَعْد ذَلِك (després d'això), بِسَبَب (a causa de), مَعَ ذَلِك (tot i això), رَغْم (malgrat), بِسُرْعَة (ràpidament), تَقْرِيبًا (aproximadament), عَلَى الأَقَل (com a mínim), بِصَرَاحَة (honestament/francament)
+
+EXPRESSIONS MÈDIQUES DE CONVERSA: بِمَ تَشْعُر؟ (com et trobes?/que sents?), أَشْعُر بِأَلَم شَدِيد (sento un dolor fort), لِمَاذَا تَغَيَّبْت؟ (per què has faltat?), أُصِبْت بِزُكَام شَدِيد (he agafat un constipat fort), هَل قَابَلْت الطَّبِيب؟ (has vist el metge?), نَعَم, ذَهَبْت إِلَى المُسْتَشْفَى (sí, vaig anar a l'hospital), بِمَ نَصَحَك الطَّبِيب؟ (que et va recomanar el metge?), نَصَحَنِي بِالرَّاحَة وَتَنَاوُل الدَّوَاء (em va recomanar descansar i prendre medicaments), هَذَا هُوَ التَّقْرِير الطِّبِّيّ (aquest és l'informe mèdic), شُكْرًا لَك (gràcies), الحَمْدُ لِلَّه أَنَا بِخَيْر (gràcies a Déu estic bé)
+
+EXPRESSIONS DE COMPRA (diàlegs complets): أَهْلًا وَسَهْلًا (benvingut), أَيّ خِدْمَة؟ (en qué puc ajudar?), أُرِيد مِنْ فَضْلِك (vull si us plau), تَفَضَّل (aquí tens/endavant), المَطْلُوب (el total és), بِكَمْ الكِيلُو؟ (quant val el quilo?), غَالِي جِدًّا (és molt car), لَوْ سَمَحْت (si us plau/excusa'm), هَل عِنْدَك؟ (tens...?), لَا يُوجَد (no n'hi ha), هَل تُرِيد شَيْئًا آخَر؟ (vols alguna cosa més?), لَا شُكْرًا (no gràcies)`;
+
+// ── SYNONYMS & ANTONYMS DATA ─────────────────────────────────────────────
+const synAntData = {
+  synonyms: [
+    { ar1:"يُشَاهِدُ", ar2:"يَرَى", ca1:"mirar", ca2:"veure", en:"to watch / to see" },
+    { ar1:"يَتَكَلَّمُ", ar2:"يَتَحَدَّثُ", ca1:"parlar", ca2:"conversar", en:"to speak / to talk" },
+    { ar1:"يُجِيبُ", ar2:"يَرُدُّ", ca1:"respondre", ca2:"contestar", en:"to answer / to reply" },
+    { ar1:"مُحَادَثَة", ar2:"حِوَار", ca1:"conversa", ca2:"diàleg", en:"conversation / dialogue" },
+    { ar1:"يَسْكُنُ", ar2:"يَعِيشُ", ca1:"residir", ca2:"viure", en:"to reside / to live" },
+    { ar1:"يَسْتَطِيعُ", ar2:"يُمْكِنُ", ca1:"poder", ca2:"ser possible", en:"can / is possible" },
+    { ar1:"ضِدّ", ar2:"عَكْس", ca1:"oposat", ca2:"contrari", en:"opposite / reverse" },
+    { ar1:"يُحِبُّ", ar2:"يَهْوَى", ca1:"estimar", ca2:"adorar", en:"to love / to adore" },
+    { ar1:"يَظُنُّ", ar2:"يَعْتَقِدُ", ca1:"pensar", ca2:"creure", en:"to think / to believe" },
+    { ar1:"يُغَادِرُ", ar2:"يَرْحَلُ", ca1:"marxar", ca2:"partir", en:"to depart / to leave" },
+    { ar1:"يَبْقَى", ar2:"يَظَلُّ", ca1:"quedar-se", ca2:"romandre", en:"to stay / to remain" },
+    { ar1:"يُكْمِلُ", ar2:"يُنْهِي", ca1:"completar", ca2:"acabar", en:"to complete / to finish" },
+    { ar1:"مَنْزِل", ar2:"بَيْت", ca1:"llar", ca2:"casa", en:"home / house" },
+    { ar1:"طَبِيب", ar2:"دُكْتُور", ca1:"metge", ca2:"doctor", en:"physician / doctor" },
+    { ar1:"يَبْدَأُ", ar2:"يَشْرَعُ", ca1:"començar", ca2:"iniciar", en:"to begin / to start" },
+    { ar1:"جَمِيل", ar2:"حَسَن", ca1:"bonic", ca2:"bo/agradable", en:"beautiful / nice" },
+  ],
+  antonyms: [
+    { ar1:"كَبِير", ar2:"صَغِير", ca1:"gran", ca2:"petit", en:"big / small" },
+    { ar1:"طَوِيل", ar2:"قَصِير", ca1:"llarg/alt", ca2:"curt/baix", en:"tall / short" },
+    { ar1:"سَمِين", ar2:"نَحِيف", ca1:"gras", ca2:"prim", en:"fat / thin" },
+    { ar1:"جَمِيل", ar2:"قَبِيح", ca1:"bonic", ca2:"lleig", en:"beautiful / ugly" },
+    { ar1:"سَرِيع", ar2:"بَطِيء", ca1:"ràpid", ca2:"lent", en:"fast / slow" },
+    { ar1:"صَعْب", ar2:"سَهْل", ca1:"difícil", ca2:"fàcil", en:"difficult / easy" },
+    { ar1:"قَدِيم", ar2:"جَدِيد", ca1:"antic", ca2:"nou", en:"old / new" },
+    { ar1:"غَالِي", ar2:"رَخِيص", ca1:"car", ca2:"barat", en:"expensive / cheap" },
+    { ar1:"قَرِيب", ar2:"بَعِيد", ca1:"a prop", ca2:"lluny", en:"near / far" },
+    { ar1:"حَارّ", ar2:"بَارِد", ca1:"calent", ca2:"fred", en:"hot / cold" },
+    { ar1:"سَعِيد", ar2:"حَزِين", ca1:"content", ca2:"trist", en:"happy / sad" },
+    { ar1:"قَوِيّ", ar2:"ضَعِيف", ca1:"fort", ca2:"dèbil", en:"strong / weak" },
+    { ar1:"مُرْتَفِع", ar2:"مُنْخَفِض", ca1:"alt/elevat", ca2:"baix", en:"high / low" },
+    { ar1:"مُزْدَحِم", ar2:"خَالِي", ca1:"ple/concorregut", ca2:"buit", en:"crowded / empty" },
+    { ar1:"مَرِيض", ar2:"صَحِيح", ca1:"malalt", ca2:"sa", en:"sick / healthy" },
+    { ar1:"نَظِيف", ar2:"مُتَلَوِّث", ca1:"net", ca2:"contaminat", en:"clean / polluted" },
+    { ar1:"يَدْخُلُ", ar2:"يَخْرُجُ", ca1:"entrar", ca2:"sortir", en:"to enter / to exit" },
+    { ar1:"يَبْدَأُ", ar2:"يَنْتَهِي", ca1:"començar", ca2:"acabar", en:"to begin / to end" },
+    { ar1:"يَفْتَحُ", ar2:"يُقْفِلُ", ca1:"obrir", ca2:"tancar", en:"to open / to close" },
+    { ar1:"الصُّعُود", ar2:"الهُبُوط", ca1:"pujar", ca2:"baixar", en:"to ascend / to descend" },
+    { ar1:"يَرْبَحُ", ar2:"يَخْسَرُ", ca1:"guanyar", ca2:"perdre", en:"to win / to lose" },
+    { ar1:"يُحِبُّ", ar2:"يَكْرَهُ", ca1:"estimar", ca2:"odiar", en:"to love / to hate" },
+    { ar1:"يَنَامُ", ar2:"يَسْتَيْقِظُ", ca1:"dormir", ca2:"despertar-se", en:"to sleep / to wake up" },
+    { ar1:"يَرْتَفِعُ", ar2:"يَنْخَفِضُ", ca1:"pujar", ca2:"baixar", en:"to increase / to decrease" },
+    { ar1:"يَشْتَرِي", ar2:"يَبِيعُ", ca1:"comprar", ca2:"vendre", en:"to buy / to sell" },
+    { ar1:"يَسْأَلُ", ar2:"يُجِيبُ", ca1:"preguntar", ca2:"respondre", en:"to ask / to answer" },
+  ]
+};
 
 // ── STORAGE ───────────────────────────────────────────────────────────────
 const STORAGE_KEY = "arabic_verb_stats_v3";
@@ -395,6 +603,7 @@ function renderMenu(){
       </button>
       <button class="btn-outline" onclick="showScreen('list');renderList()">📋 Veure tots els verbs</button>
       <button class="btn-ai" onclick="showScreen('ai');renderAIMenu()">✨ Activitats amb IA</button>
+      <button onclick="showScreen('syn');renderSynMenu()" style="padding:15px;border-radius:18px;border:2px solid #10b981;background:rgba(16,185,129,.08);color:#34d399;font-size:16px;cursor:pointer;font-weight:600;width:100%">🔄 Sinònims i Antònims</button>
       ${totalFails>0?`<div style="text-align:center;color:#444;font-size:12px">${totalFails} errors acumulats · ${fv.length} verbs pendents</div>`:""}
     </div>
   </div>`;
@@ -571,7 +780,29 @@ const AI_ACTIVITIES=[
   {id:"story", icon:"📖", title:"Conte generat", desc:"L'IA escriu un conte curt usant el teu vocabulari. Passa el cursor per cada paraula per veure la traducció."},
   {id:"fill",  icon:"✏️", title:"Omple els buits", desc:"Frases en àrab amb un verb buit. Tries la forma correcta."},
   {id:"translate", icon:"🔄", title:"Traducció", desc:"Frases per traduir català↔àrab. Desveles la solució quan vulguis."},
-  {id:"chat",  icon:"💬", title:"Conversa", desc:"Conversa en àrab amb la IA. Et corregeix i t'ajuda."},
+  {id:"chat",  icon:"💬", title:"Conversa lliure", desc:"Conversa en àrab amb la IA. Et corregeix i t'ajuda."},
+  {id:"themed", icon:"🎭", title:"Conversa temàtica", desc:"Tria un tema (mercat, metge, hobbies...) i practica una conversa real basada en les unitats del teu llibre."},
+];
+
+const CONVERSATION_THEMES = [
+  {id:"shopping_books",  emoji:"📚", label:"Comprant llibres",        unit:"Unit 9",  desc:"Ets un estudiant que compra diccionaris i llibres en una llibreria àrab."},
+  {id:"shopping_food",   emoji:"🥕", label:"Al mercat de menjar",     unit:"Unit 9",  desc:"Compres verdures, peix, ou i cafè en un mercat. Regateges el preu."},
+  {id:"shopping_clothes",emoji:"👕", label:"Comprant roba",           unit:"Unit 9",  desc:"Vols comprar una camisa o una thawb. Preguntes preus i colors."},
+  {id:"city_village",    emoji:"🏡", label:"Ciutat vs poble",         unit:"Unit 11", desc:"Parles amb algú sobre si prefereix viure a la ciutat o al poble, i per qué."},
+  {id:"travel_mecca",    emoji:"🕌", label:"Viatge a la Meca",        unit:"Unit 11", desc:"Expliques que vols fer la umra i demanes consell sobre el viatge."},
+  {id:"work_company",    emoji:"💼", label:"Nou treball / empresa",   unit:"Unit 11", desc:"T'has traslladat a una nova empresa. Expliques on treballes i com hi vas."},
+  {id:"hobbies_reading", emoji:"📖", label:"Aficions: lectura",       unit:"Unit 12", desc:"Parles dels teus llibres preferits i quantes hores llegeixes al dia."},
+  {id:"hobbies_sport",   emoji:"⚽", label:"Aficions: esport",        unit:"Unit 12", desc:"Parles dels teus esports preferits i si practiques alguna cosa."},
+  {id:"hobbies_club",    emoji:"🎨", label:"Club d'aficions",        unit:"Unit 12", desc:"T'apuntes a un club o associació cultural. Tries entre diverses seccions."},
+  {id:"health_dentist",  emoji:"🦷", label:"Al dentista",             unit:"Unit 15", desc:"Tens un dolor fort de dents i vas al dentista. Expliques els símptomes."},
+  {id:"health_ent",      emoji:"👂", label:"Al metge d'orella/nas",  unit:"Unit 15", desc:"Tens un constipat fort i vas al metge d'ORL. Parles de símptomes i medicines."},
+  {id:"health_checkup",  emoji:"❤️", label:"Revisió mèdica general",  unit:"Unit 15", desc:"Et fan una revisió. Et mesuren la pressió, el cor i la ronyó. Parles dels resultats."},
+  {id:"weather_chat",    emoji:"🌧️", label:"Parlant del temps",       unit:"Unit 10", desc:"Parles del temps amb un amic d'un altre país. Compares temperatures i estacions."},
+  {id:"weather_plan",    emoji:"☀️", label:"Plans pel cap de setmana", unit:"Unit 10", desc:"Fa bon temps o plou? Planifiques què fer: anar al mercat, quedar-se a casa, sortir."},
+  {id:"travel_airport",  emoji:"✈️", label:"A l'aeroport",            unit:"Unit 13", desc:"Ets a l'aeroport confirmant reserva, ensenyant passaport i bitllets. Parles amb l'empleat."},
+  {id:"travel_border",   emoji:"🛂", label:"Control de passaport",    unit:"Unit 13", desc:"Un agent et demana el passaport, d'on véns, per què viatges i quant temps et quedes."},
+  {id:"vacation_plan",   emoji:"🏖️", label:"Planificant vacances",    unit:"Unit 16", desc:"La família planifica les vacances d'estiu: on anar, com viatjar, quants dies."},
+  {id:"vacation_summer", emoji:"⛰️", label:"Vacances d'estiu",        unit:"Unit 16", desc:"El professor pregunta als alumnes on passaran les vacances: poble, capital, muntanya, La Meca."},
 ];
 
 function enterAISection(){
@@ -656,7 +887,7 @@ async function callAI(system, user, history){
     },
     body:JSON.stringify({
       model:"claude-haiku-4-5-20251001",
-      max_tokens:2048,
+      max_tokens:4096,
       system:system,
       messages:msgs
     })
@@ -695,35 +926,40 @@ async function startAIActivity(id){
   try{
     if(id==="story"){
       const txt=await callAI(
-        `Ets un professor d'àrab. ${VOCAB_CONTEXT}
-Escriu un conte curt de 4 frases en àrab MSA. Vocabulari conegut + màx 1 paraula nova per frase.
-Respon NOMÉS en JSON, sense text ni backticks:
-{"sentences":[{"ar":"frase","ca":"traducció catalana"}]}
+        `Ets un professor d'àrab. ${VOCAB_SHORT}
+Escriu un conte de 4-5 frases en àrab MSA. Vocabulari conegut + màx 1 paraula nova per frase.
 
-VARIETAT MÀXIMA: cada vegada tria aleatòriament UN tema d'aquesta llista i segueix-lo estrictament:
-1. Drama familiar: conflicte entre germans, secret descobert, discussió sopar
-2. Viatge inesperat: perd passaport, tren equivocat, tempesta imprevista
-3. Situació còmica: malentès ridícul, accident domèstic, confusió de noms
-4. Misteri quotidià: objecte desaparegut, veí estrany, soroll nocturn
-5. Primera vegada: primer dia feina, primer viatge sol, primera cuina
-6. Mercat i regateix: preu injust, producte defectuós, venedor insistent
-7. Visita mèdica: símptomes estranys, metge confós, remei sorprenent
-8. Amor i malentesos: cita nerviosa, carta no enviada, retrobament
-9. Escola i exàmens: trampa que falla, professor inesperat, resultat sorpresa
-10. Tecnologia i problemes: telèfon perdut, internet cau, error informàtic
-11. Esport i competició: entrenament dur, lesió, victòria o derrota inesperada
-12. Cuina desastrosa: recepta mal seguida, ingredient equivocat, foc a la cuina
-13. Reunió de feina: presentació catastròfica, client difícil, error de darrera hora
-14. Natura i aventura: excursió perduda, animal inesperat, canvi de temps
-15. Festa i celebració: convidat no esperat, regal equivocat, discurs desastrós
-16. Transport i retards: autobús perdut, taxi estrany, cotxe espatllat
-17. Veïns i comunitat: soroll molest, paquet equivocat, favor inesperat
-18. Compres en línia: producte diferent, retorn complicat, sorpresa a la caixa
-19. Memòria i oblit: aniversari oblidat, nom que no recorda, claus perdudes
-20. Somni i realitat: despertar confós, somni que semblava real, deja vu
+TEMA ALEATORI - tria UNA opció cada vegada i canvia-la:
+1. Drama familiar: secret, discussió, promesa trencada
+2. Situació còmica: accident, confusió, malentès
+3. Misteri: soroll nocturn, objecte desaparegut, veí estrany
+4. Mercat: preu injust, venedor insistent, sorpresa
+5. Visita mèdica: símptomes estranys, remei sorprenent
+6. Escola: trampa que falla, nota inesperada
+7. Esport: lesió al moment clau, victòria o derrota
+8. Cuina: recepta fallida, ingredient equivocat
+9. Amor: cita nerviosa, missatge enviat a qui no toca
+10. Feina: presentació catastròfica, client difícil
+11. Transport: bus perdut, taxi estrany, cotxe espatllat
+12. Veïns: soroll molest, paquet equivocat, festa
+13. Tecnologia: mòbil mort, contrasenya oblidada, foto publicada per error
+14. Natura: excursió perduda, animal inesperat, tempesta
+15. Festa: regal equivocat, discurs desastrós, convidat inesperat
+16. Memòria: aniversari oblidat, claus perdudes
+17. Compres: producte diferent, retorn complicat
+18. Amistats: amic del passat, promesa d'infància
+19. Salut i hàbits: dieta que falla, remei casolà
+20. Somnis: despertar confós, deja vu
 
-Noms àrabs variats: Ahmad, Fatima, Khalid, Layla, Yusuf, Sara, Hassan, Nour, Mariam, Tariq, Zainab, Bilal, Rania, Samira, Karim.
-El final pot ser feliç, sorprenent, ambigu, còmic o trist. MAI previsible.`,
+NOMS - usa NOMS VARIATS, mai Fatima ni Ahmad com a protagonistes:
+Khalid, Layla, Yusuf, Sara, Hassan, Nour, Mariam, Tariq, Zainab, Bilal, Rania, Samira, Karim, Lina, Aisha, Jamal, Hana, Sami, Dina, Walid, Rana, Faris, Mona, Salma, Huda, Rim
+
+FINALS: mai feliç previsible. Pot ser: sorprenent, ambigu, còmic, trist, irònic.
+
+Respon NOMÉS en JSON sense backticks:
+{"theme":"tema triat","sentences":[{"ar":"frase","ca":"traducció","words":[{"ar":"mot","ca":"trad"},...]}]}
+Totes les paraules de cada frase han d'aparèixer a "words" en ordre.
+IMPORTANT: escriu TOT l'àrab amb vocalització completa (tashkil): fatha َ kasra ِ damma ُ shadda ّ sukun ْ. Sense excepció.`,
         "Genera un conte curt i interessant sobre la vida quotidiana o un viatge."
       );
       aiContent=JSON.parse(txt.replace(/```json|```/g,"").trim());
@@ -731,7 +967,7 @@ El final pot ser feliç, sorprenent, ambigu, còmic o trist. MAI previsible.`,
 
     }else if(id==="fill"){
       const txt=await callAI(
-        `Ets un professor d'àrab. ${VOCAB_CONTEXT}
+        `Ets un professor d'àrab. ${VOCAB_SHORT}
 Genera 5 frases en àrab on un verb (conjugat en present o passat هو/هي) és substituït per _____.
 Respon ÚNICAMENT en JSON sense cap text addicional ni backticks:
 {"items":[{"ar":"frase amb _____","ca":"traducció indicant el temps verbal","answer":"verb correcte","options":["op1","op2","op3","op4"]}]}
@@ -741,7 +977,8 @@ VARIETAT: cada vegada barreja contextos molt diferents:
 - Temps verbals: alterna present i passat de manera impredictible
 - Subjectes: ell, ella, persones amb noms àrabs variats
 - Dificultat: barreja verbs simples (كتب، ذهب) amb verbs més complexos (استيقظ، اعتقد، استطاع)
-- Que les 4 opcions siguin plausibles semànticament però solo una correcta gramaticalment o contextual`,
+- Que les 4 opcions siguin plausibles semànticament però solo una correcta gramaticalment o contextual.
+IMPORTANT: escriu TOT l'àrab amb vocalització completa (tashkil). SEMPRE.`,
         "Genera 5 exercicis d'omplir buits."
       );
       aiContent=JSON.parse(txt.replace(/```json|```/g,"").trim());
@@ -749,7 +986,7 @@ VARIETAT: cada vegada barreja contextos molt diferents:
 
     }else if(id==="translate"){
       const txt=await callAI(
-        `Ets un professor d'àrab. ${VOCAB_CONTEXT}
+        `Ets un professor d'àrab. ${VOCAB_SHORT}
 Genera 5 frases per traduir, alternant català→àrab i àrab→català de manera variada.
 Respon ÚNICAMENT en JSON sense cap text addicional ni backticks:
 {"items":[{"from":"frase original","to":"traducció correcta","dir":"ca→ar o ar→ca"}]}
@@ -759,7 +996,8 @@ VARIETAT MÀXIMA - cada vegada usa temes completament diferents:
 - Tipus de frase: afirmativa, negativa, pregunta, exclamació
 - Temps verbals: barreja present, passat i futur (سـ + present)
 - Complexitat: de simples (Va al mercat) a compostes (Volia viatjar però estava malalt)
-- Expressions útils: frases fetes, expressions de cortesia, opinions`,
+- Expressions útils: frases fetes, expressions de cortesia, opinions
+IMPORTANT: escriu TOT l'àrab amb vocalització completa (tashkil). SEMPRE.`,
         "Genera 5 frases de traducció variades."
       );
       aiContent=JSON.parse(txt.replace(/```json|```/g,"").trim());
@@ -774,6 +1012,10 @@ Format: línia en àrab \n (traducció al català entre parèntesis)`,
       );
       chatHistory=[{role:"assistant",text:greeting}];
       renderChat();
+
+    }else if(id==="themed"){
+      renderThemedMenu();
+      return;
     }
   }catch(e){
     if(e.message === "No API key" || e.message === "Invalid API key") return;
@@ -800,29 +1042,61 @@ function aiHeader(title){
 // ── STORY ──
 function renderStory(){
   if(!aiContent||!aiContent.sentences){return;}
-  const rows=aiContent.sentences.map((s,i)=>{
-    return `<div style="margin-bottom:6px">
-      <div class="ar" style="font-size:28px;color:#fff;line-height:1.8;text-align:right">${s.ar}</div>
-    </div>`;
+
+  // Build sentence rows with clickable words
+  const rows = aiContent.sentences.map((s,i) => {
+    let wordsHtml = "";
+    if(s.words && s.words.length > 0){
+      wordsHtml = s.words.map(w => {
+        const wid = "w_" + Math.random().toString(36).slice(2);
+        if(!window._tips) window._tips = {};
+        window._tips[wid] = w.ca;
+        return '<span class="ar-word" id="' + wid + '" onclick="toggleWordTip(\'' + wid + '\')">' +
+               '<span class="ar-word-text">' + w.ar + '</span>' +
+               '<span class="ar-word-tip">' + w.ca + '</span></span>';
+      }).join(" ");;
+    } else {
+      wordsHtml = `<span class="ar" style="font-size:36px;color:#fff;line-height:1.8">${s.ar}</span>`;
+    }
+    return `<p style="line-height:2.4;text-align:right;direction:rtl;margin-bottom:8px">${wordsHtml}</p>`;
   }).join("");
 
-  const fullTrans=aiContent.sentences.map((s,i)=>
+  const fullTrans = aiContent.sentences.map((s,i) =>
     `<p style="color:#aaa;font-size:15px;margin:0 0 6px;line-height:1.6">${i+1}. ${s.ca}</p>`
   ).join("");
 
+  const theme = aiContent.theme ? `<div style="font-size:12px;color:#666;text-align:center;margin-bottom:12px;letter-spacing:1px">Tema: ${aiContent.theme}</div>` : "";
+
   document.getElementById("screen-ai-activity").innerHTML=`
+  <style>
+    .ar-word{position:relative;display:inline-block;cursor:pointer;margin:0 3px}
+    .ar-word-text{font-family:Arial,sans-serif;font-size:36px;color:#fff;border-bottom:1px dotted rgba(167,139,250,.5);padding-bottom:1px}
+    .ar-word:hover .ar-word-text,.ar-word.open .ar-word-text{color:#c4b5fd;border-bottom-color:#a78bfa}
+    .ar-word-tip{display:none;position:absolute;bottom:110%;left:50%;transform:translateX(-50%);background:#1e1b4b;border:1px solid #7c3aed;border-radius:8px;padding:6px 14px;font-size:16px;color:#c4b5fd;white-space:nowrap;pointer-events:none;z-index:100;direction:ltr;font-family:Georgia,serif;box-shadow:0 4px 16px rgba(0,0,0,.6)}
+    .ar-word.open .ar-word-tip{display:block}
+  </style>
   <div style="min-height:100vh;background:linear-gradient(135deg,#0f0c29,#302b63,#24243e);padding:24px 16px">
     <div style="max-width:580px;margin:0 auto">
       ${aiHeader("📖 Conte generat")}
+      ${theme}
+      <p style="color:#555;font-size:12px;text-align:center;margin-bottom:14px">💡 Clica cada paraula per veure la traducció</p>
       <div style="background:rgba(255,255,255,.05);border:1px solid rgba(167,139,250,.2);border-radius:20px;padding:24px 20px;margin-bottom:16px">
-        <div style="direction:rtl;line-height:2">${rows}</div>
+        ${rows}
       </div>
       <div style="background:rgba(124,58,237,.08);border:1px solid rgba(124,58,237,.25);border-radius:16px;padding:18px 20px">
-        <div style="font-size:11px;color:#a78bfa;letter-spacing:2px;text-transform:uppercase;margin-bottom:12px">📖 Traducció</div>
+        <div style="font-size:11px;color:#a78bfa;letter-spacing:2px;text-transform:uppercase;margin-bottom:12px">📖 Traducció completa</div>
         ${fullTrans}
       </div>
     </div>
   </div>`;
+}
+
+function toggleWordTip(id){
+  const el = document.getElementById(id);
+  if(!el) return;
+  const isOpen = el.classList.contains("open");
+  document.querySelectorAll(".ar-word.open").forEach(w => w.classList.remove("open"));
+  if(!isOpen) el.classList.add("open");
 }
 
 
@@ -942,8 +1216,21 @@ function renderChat(){
       <div style="flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:12px;margin-bottom:16px;max-height:55vh">${msgs}
         ${chatHistory.length>0&&chatHistory[chatHistory.length-1].role==="user"?'<div style="color:#a78bfa;font-size:14px;text-align:center;padding:8px;animation:pulse 1s infinite">✨ Escrivint...</div>':""}
       </div>
+      <div style="display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap">
+        <button onclick="toggleArabicKb()" id="kb-toggle" style="padding:8px 14px;border-radius:10px;border:1px solid rgba(167,139,250,.4);background:rgba(167,139,250,.1);color:#a78bfa;font-size:13px;cursor:pointer">⌨️ Teclat àrab</button>
+      </div>
+      <div id="arabic-kb" style="display:none;background:rgba(255,255,255,.05);border:1px solid #333;border-radius:14px;padding:10px;margin-bottom:10px;direction:rtl">
+        <div style="display:flex;flex-wrap:wrap;gap:5px;justify-content:center;margin-bottom:6px">
+          <button onclick="insertChar('ض')" style="width:36px;height:36px;border-radius:8px;border:1px solid #444;background:rgba(255,255,255,.08);color:#fff;font-family:Arial,sans-serif;font-size:18px;cursor:pointer">ض</button><button onclick="insertChar('ص')" style="width:36px;height:36px;border-radius:8px;border:1px solid #444;background:rgba(255,255,255,.08);color:#fff;font-family:Arial,sans-serif;font-size:18px;cursor:pointer">ص</button><button onclick="insertChar('ث')" style="width:36px;height:36px;border-radius:8px;border:1px solid #444;background:rgba(255,255,255,.08);color:#fff;font-family:Arial,sans-serif;font-size:18px;cursor:pointer">ث</button><button onclick="insertChar('ق')" style="width:36px;height:36px;border-radius:8px;border:1px solid #444;background:rgba(255,255,255,.08);color:#fff;font-family:Arial,sans-serif;font-size:18px;cursor:pointer">ق</button><button onclick="insertChar('ف')" style="width:36px;height:36px;border-radius:8px;border:1px solid #444;background:rgba(255,255,255,.08);color:#fff;font-family:Arial,sans-serif;font-size:18px;cursor:pointer">ف</button><button onclick="insertChar('غ')" style="width:36px;height:36px;border-radius:8px;border:1px solid #444;background:rgba(255,255,255,.08);color:#fff;font-family:Arial,sans-serif;font-size:18px;cursor:pointer">غ</button><button onclick="insertChar('ع')" style="width:36px;height:36px;border-radius:8px;border:1px solid #444;background:rgba(255,255,255,.08);color:#fff;font-family:Arial,sans-serif;font-size:18px;cursor:pointer">ع</button><button onclick="insertChar('ه')" style="width:36px;height:36px;border-radius:8px;border:1px solid #444;background:rgba(255,255,255,.08);color:#fff;font-family:Arial,sans-serif;font-size:18px;cursor:pointer">ه</button><button onclick="insertChar('خ')" style="width:36px;height:36px;border-radius:8px;border:1px solid #444;background:rgba(255,255,255,.08);color:#fff;font-family:Arial,sans-serif;font-size:18px;cursor:pointer">خ</button><button onclick="insertChar('ح')" style="width:36px;height:36px;border-radius:8px;border:1px solid #444;background:rgba(255,255,255,.08);color:#fff;font-family:Arial,sans-serif;font-size:18px;cursor:pointer">ح</button><button onclick="insertChar('ج')" style="width:36px;height:36px;border-radius:8px;border:1px solid #444;background:rgba(255,255,255,.08);color:#fff;font-family:Arial,sans-serif;font-size:18px;cursor:pointer">ج</button><button onclick="insertChar('د')" style="width:36px;height:36px;border-radius:8px;border:1px solid #444;background:rgba(255,255,255,.08);color:#fff;font-family:Arial,sans-serif;font-size:18px;cursor:pointer">د</button><button onclick="insertChar('ذ')" style="width:36px;height:36px;border-radius:8px;border:1px solid #444;background:rgba(255,255,255,.08);color:#fff;font-family:Arial,sans-serif;font-size:18px;cursor:pointer">ذ</button><button onclick="insertChar('ر')" style="width:36px;height:36px;border-radius:8px;border:1px solid #444;background:rgba(255,255,255,.08);color:#fff;font-family:Arial,sans-serif;font-size:18px;cursor:pointer">ر</button><button onclick="insertChar('ز')" style="width:36px;height:36px;border-radius:8px;border:1px solid #444;background:rgba(255,255,255,.08);color:#fff;font-family:Arial,sans-serif;font-size:18px;cursor:pointer">ز</button><button onclick="insertChar('س')" style="width:36px;height:36px;border-radius:8px;border:1px solid #444;background:rgba(255,255,255,.08);color:#fff;font-family:Arial,sans-serif;font-size:18px;cursor:pointer">س</button><button onclick="insertChar('ش')" style="width:36px;height:36px;border-radius:8px;border:1px solid #444;background:rgba(255,255,255,.08);color:#fff;font-family:Arial,sans-serif;font-size:18px;cursor:pointer">ش</button><button onclick="insertChar('ط')" style="width:36px;height:36px;border-radius:8px;border:1px solid #444;background:rgba(255,255,255,.08);color:#fff;font-family:Arial,sans-serif;font-size:18px;cursor:pointer">ط</button><button onclick="insertChar('ظ')" style="width:36px;height:36px;border-radius:8px;border:1px solid #444;background:rgba(255,255,255,.08);color:#fff;font-family:Arial,sans-serif;font-size:18px;cursor:pointer">ظ</button><button onclick="insertChar('ل')" style="width:36px;height:36px;border-radius:8px;border:1px solid #444;background:rgba(255,255,255,.08);color:#fff;font-family:Arial,sans-serif;font-size:18px;cursor:pointer">ل</button><button onclick="insertChar('ا')" style="width:36px;height:36px;border-radius:8px;border:1px solid #444;background:rgba(255,255,255,.08);color:#fff;font-family:Arial,sans-serif;font-size:18px;cursor:pointer">ا</button><button onclick="insertChar('ت')" style="width:36px;height:36px;border-radius:8px;border:1px solid #444;background:rgba(255,255,255,.08);color:#fff;font-family:Arial,sans-serif;font-size:18px;cursor:pointer">ت</button><button onclick="insertChar('ن')" style="width:36px;height:36px;border-radius:8px;border:1px solid #444;background:rgba(255,255,255,.08);color:#fff;font-family:Arial,sans-serif;font-size:18px;cursor:pointer">ن</button><button onclick="insertChar('م')" style="width:36px;height:36px;border-radius:8px;border:1px solid #444;background:rgba(255,255,255,.08);color:#fff;font-family:Arial,sans-serif;font-size:18px;cursor:pointer">م</button><button onclick="insertChar('ك')" style="width:36px;height:36px;border-radius:8px;border:1px solid #444;background:rgba(255,255,255,.08);color:#fff;font-family:Arial,sans-serif;font-size:18px;cursor:pointer">ك</button><button onclick="insertChar('ي')" style="width:36px;height:36px;border-radius:8px;border:1px solid #444;background:rgba(255,255,255,.08);color:#fff;font-family:Arial,sans-serif;font-size:18px;cursor:pointer">ي</button><button onclick="insertChar('ب')" style="width:36px;height:36px;border-radius:8px;border:1px solid #444;background:rgba(255,255,255,.08);color:#fff;font-family:Arial,sans-serif;font-size:18px;cursor:pointer">ب</button><button onclick="insertChar('و')" style="width:36px;height:36px;border-radius:8px;border:1px solid #444;background:rgba(255,255,255,.08);color:#fff;font-family:Arial,sans-serif;font-size:18px;cursor:pointer">و</button><button onclick="insertChar('ة')" style="width:36px;height:36px;border-radius:8px;border:1px solid #444;background:rgba(255,255,255,.08);color:#fff;font-family:Arial,sans-serif;font-size:18px;cursor:pointer">ة</button><button onclick="insertChar('أ')" style="width:36px;height:36px;border-radius:8px;border:1px solid #444;background:rgba(255,255,255,.08);color:#fff;font-family:Arial,sans-serif;font-size:18px;cursor:pointer">أ</button><button onclick="insertChar('إ')" style="width:36px;height:36px;border-radius:8px;border:1px solid #444;background:rgba(255,255,255,.08);color:#fff;font-family:Arial,sans-serif;font-size:18px;cursor:pointer">إ</button><button onclick="insertChar('ئ')" style="width:36px;height:36px;border-radius:8px;border:1px solid #444;background:rgba(255,255,255,.08);color:#fff;font-family:Arial,sans-serif;font-size:18px;cursor:pointer">ئ</button><button onclick="insertChar('ؤ')" style="width:36px;height:36px;border-radius:8px;border:1px solid #444;background:rgba(255,255,255,.08);color:#fff;font-family:Arial,sans-serif;font-size:18px;cursor:pointer">ؤ</button><button onclick="insertChar('ء')" style="width:36px;height:36px;border-radius:8px;border:1px solid #444;background:rgba(255,255,255,.08);color:#fff;font-family:Arial,sans-serif;font-size:18px;cursor:pointer">ء</button>
+        </div>
+        <div style="display:flex;flex-wrap:wrap;gap:5px;justify-content:center">
+          <button onclick="insertChar('َ')" title="fatha" style="width:42px;height:36px;border-radius:8px;border:1px solid rgba(249,212,35,.4);background:rgba(249,212,35,.08);color:#f9d423;font-family:Arial,sans-serif;font-size:16px;cursor:pointer">ـَ</button><button onclick="insertChar('ِ')" title="kasra" style="width:42px;height:36px;border-radius:8px;border:1px solid rgba(249,212,35,.4);background:rgba(249,212,35,.08);color:#f9d423;font-family:Arial,sans-serif;font-size:16px;cursor:pointer">ـِ</button><button onclick="insertChar('ُ')" title="damma" style="width:42px;height:36px;border-radius:8px;border:1px solid rgba(249,212,35,.4);background:rgba(249,212,35,.08);color:#f9d423;font-family:Arial,sans-serif;font-size:16px;cursor:pointer">ـُ</button><button onclick="insertChar('ّ')" title="shadda" style="width:42px;height:36px;border-radius:8px;border:1px solid rgba(249,212,35,.4);background:rgba(249,212,35,.08);color:#f9d423;font-family:Arial,sans-serif;font-size:16px;cursor:pointer">ـّ</button><button onclick="insertChar('ْ')" title="sukun" style="width:42px;height:36px;border-radius:8px;border:1px solid rgba(249,212,35,.4);background:rgba(249,212,35,.08);color:#f9d423;font-family:Arial,sans-serif;font-size:16px;cursor:pointer">ـْ</button><button onclick="insertChar('ً')" title="tanwin fath" style="width:42px;height:36px;border-radius:8px;border:1px solid rgba(249,212,35,.4);background:rgba(249,212,35,.08);color:#f9d423;font-family:Arial,sans-serif;font-size:16px;cursor:pointer">ـً</button><button onclick="insertChar('ٍ')" title="tanwin kasr" style="width:42px;height:36px;border-radius:8px;border:1px solid rgba(249,212,35,.4);background:rgba(249,212,35,.08);color:#f9d423;font-family:Arial,sans-serif;font-size:16px;cursor:pointer">ـٍ</button><button onclick="insertChar('ٌ')" title="tanwin damm" style="width:42px;height:36px;border-radius:8px;border:1px solid rgba(249,212,35,.4);background:rgba(249,212,35,.08);color:#f9d423;font-family:Arial,sans-serif;font-size:16px;cursor:pointer">ـٌ</button>
+          <button onclick="deleteChar()" style="width:42px;height:36px;border-radius:8px;border:1px solid #555;background:rgba(248,113,113,.1);color:#f87171;font-size:16px;cursor:pointer">⌫</button>
+          <button onclick="insertChar(' ')" style="width:60px;height:36px;border-radius:8px;border:1px solid #444;background:rgba(255,255,255,.05);color:#aaa;font-size:12px;cursor:pointer">espai</button>
+        </div>
+      </div>
       <div style="display:flex;gap:10px;margin-bottom:10px">
-        <input type="text" id="chat-input" placeholder="Escriu en àrab o català..." onkeydown="if(event.key==='Enter')sendChat()" style="flex:1;padding:14px 16px;border-radius:14px;border:1px solid rgba(167,139,250,.4);background:rgba(255,255,255,.06);color:#fff;font-size:16px;font-family:Arial,sans-serif">
+        <input type="text" id="chat-input" placeholder="Escriu en àrab o català..." onkeydown="if(event.key==='Enter')sendChat()" style="flex:1;padding:14px 16px;border-radius:14px;border:1px solid rgba(167,139,250,.4);background:rgba(255,255,255,.06);color:#fff;font-size:18px;font-family:Arial,sans-serif;direction:auto">
         <button onclick="sendChat()" style="padding:14px 18px;border-radius:14px;border:none;background:linear-gradient(90deg,#7c3aed,#ec4899);color:#fff;font-size:20px;cursor:pointer">➤</button>
       </div>
       <div style="display:flex;gap:8px;flex-wrap:wrap">${quickBtns}</div>
@@ -980,7 +1267,8 @@ VARIETAT: cada conversa tingues un rol diferent. Pots ser:
 - Un hoteler que rep turistes
 - Un cuiner que explica una recepta
 - Un viatger que demana informació
-Introdueix-te breument al primer missatge i mantén el rol durant tota la conversa.`,
+Introdueix-te breument al primer missatge i mantén el rol durant tota la conversa.
+IMPORTANT: escriu TOT l'àrab amb vocalització completa (tashkil): fatha, kasra, damma, shadda, sukun. SEMPRE.`,
       null,
       histForAI
     );
@@ -989,6 +1277,399 @@ Introdueix-te breument al primer missatge i mantén el rol durant tota la conver
     chatHistory.push({role:"assistant",text:"Error de connexió. Torna-ho a intentar."});
   }
   renderChat();
+}
+
+// ── THEMED CONVERSATIONS ──────────────────────────────────────────────────
+function renderThemedMenu(){
+  showScreen("ai-activity");
+  const cards = CONVERSATION_THEMES.map(t => `
+    <button onclick="startThemedChat('${t.id}')" style="padding:16px;border-radius:16px;border:1px solid rgba(167,139,250,.25);background:rgba(167,139,250,.06);text-align:left;cursor:pointer;width:100%;margin-bottom:10px;transition:background .2s"
+      onmouseover="this.style.background='rgba(167,139,250,.14)'" onmouseout="this.style.background='rgba(167,139,250,.06)'">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">
+        <span style="font-size:22px">${t.emoji}</span>
+        <span style="color:#c4b5fd;font-weight:700;font-size:16px">${t.label}</span>
+        <span style="margin-left:auto;font-size:11px;color:#555;border:1px solid #333;border-radius:10px;padding:2px 8px">${t.unit}</span>
+      </div>
+      <div style="color:#666;font-size:13px;line-height:1.5;padding-left:32px">${t.desc}</div>
+    </button>`).join("");
+
+  const randomBtn = `<button onclick="startThemedChat('random')" style="width:100%;padding:18px;border-radius:16px;border:none;background:linear-gradient(90deg,#7c3aed,#ec4899);color:#fff;font-weight:700;font-size:17px;cursor:pointer;margin-bottom:20px">
+    🎲 Tema aleatori
+  </button>`;
+
+  document.getElementById("screen-ai-activity").innerHTML = `
+  <div style="min-height:100vh;background:linear-gradient(135deg,#0f0c29,#302b63,#24243e);padding:24px 16px;overflow-y:auto">
+    <div style="max-width:560px;margin:0 auto">
+      <div style="display:flex;align-items:center;gap:14px;margin-bottom:20px">
+        <button onclick="showScreen('ai');renderAIMenu()" style="background:none;border:none;color:#888;font-size:28px;cursor:pointer">←</button>
+        <h2 style="font-size:20px;color:#a78bfa">🎭 Converses temàtiques</h2>
+      </div>
+      <p style="color:#666;font-size:13px;margin-bottom:18px;line-height:1.6">Practica converses reals basades en els diàlegs del teu llibre. La IA juga el rol de l'altra persona i et corregeix si cal.</p>
+      ${randomBtn}
+      ${cards}
+    </div>
+  </div>`;
+}
+
+async function startThemedChat(themeId){
+  let theme;
+  if(themeId === 'random'){
+    theme = CONVERSATION_THEMES[Math.floor(Math.random() * CONVERSATION_THEMES.length)];
+  } else {
+    theme = CONVERSATION_THEMES.find(t => t.id === themeId);
+  }
+  if(!theme) return;
+
+  chatHistory = [];
+  currentActivity = "themed_" + theme.id;
+  showAILoading("conversa temàtica");
+
+  const systemPrompt = `Ets un parlant natiu d'àrab en una conversa temàtica amb un estudiant. ${VOCAB_CONTEXT}
+
+TEMA: ${theme.label} (${theme.unit})
+SITUACIÓ: ${theme.desc}
+
+ROL: Inicia tu la conversa de manera natural en àrab, presentant-te en el rol adequat (venedor, metge, company...).
+REGLES:
+- Usa vocabulari del nivell de l'estudiant (A2-B1)
+- Frases curtes i clares
+- Si l'estudiant comet errors, corregeix-los breument i continua
+- Mantén el tema fins que l'estudiant vulgui acabar
+- IMPORTANT: escriu TOT l'àrab amb vocalització completa (tashkil)
+Format de cada missatge: primera línia en àrab, segona línia traducció al català entre parèntesis. Si cal: 💡 Correcció: ...`;
+
+  try {
+    const greeting = await callAI(systemPrompt, "Inicia la conversa temàtica");
+    chatHistory = [{role:"assistant", text:greeting}];
+    renderThemedChat(theme, systemPrompt);
+  } catch(e) {
+    if(e.message === "No API key" || e.message === "Invalid API key") return;
+    document.getElementById("screen-ai-activity").innerHTML = `
+    <div style="min-height:100vh;background:linear-gradient(135deg,#0f0c29,#302b63,#24243e);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px">
+      <div style="color:#f87171;font-size:18px;text-align:center;margin-bottom:16px">Error: ${e.message}</div>
+      <button onclick="renderThemedMenu()" style="padding:14px 28px;border-radius:14px;border:none;background:#7c3aed;color:#fff;cursor:pointer">← Tornar</button>
+    </div>`;
+  }
+}
+
+function renderThemedChat(theme, systemPrompt){
+  showScreen("ai-activity");
+  const msgs = chatHistory.map(m => {
+    const isAI = m.role === "assistant";
+    if(isAI){
+      const lines = m.text.split("\n");
+      const arLine = `<div class="ar" style="font-size:20px;color:#fff;line-height:1.7">${lines[0]||""}</div>`;
+      const rest = lines.slice(1).map(l => `<div style="color:#aaa;font-size:13px;font-style:italic">${l}</div>`).join("");
+      const speakBtn = lines[0] ? `<button onclick="speakAr(${JSON.stringify(lines[0])});this.textContent='🔊';setTimeout(()=>this.textContent='🔈',1800)" style="background:none;border:none;color:#555;font-size:16px;cursor:pointer;margin-top:4px">🔈</button>` : "";
+      return `<div style="display:flex;justify-content:flex-start;margin-bottom:10px">
+        <div style="max-width:85%;padding:14px 16px;border-radius:18px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1)">
+          ${arLine}${rest}${speakBtn}
+        </div>
+      </div>`;
+    } else {
+      return `<div style="display:flex;justify-content:flex-end;margin-bottom:10px">
+        <div style="max-width:85%;padding:14px 16px;border-radius:18px;background:rgba(124,58,237,.3);border:1px solid rgba(124,58,237,.5)">
+          <span style="color:#e2e8f0;font-size:16px">${m.text}</span>
+        </div>
+      </div>`;
+    }
+  }).join("");
+
+  const quickBtns = ["نَعَم", "لَا، شُكْرًا", "مِنْ فَضْلِك", "لَا أَفْهَمُ، كَرِّرْ", "شُكْرًا، مَعَ السَّلَامَة"]
+    .map(s => `<button onclick="setThemedInput(${JSON.stringify(s)})" class="ar" style="padding:6px 12px;border-radius:10px;border:1px solid #444;background:rgba(255,255,255,.04);color:#888;font-size:14px;cursor:pointer;direction:rtl">${s}</button>`)
+    .join("");
+
+  document.getElementById("screen-ai-activity").innerHTML = `
+  <div style="min-height:100vh;background:linear-gradient(135deg,#0f0c29,#302b63,#24243e);padding:24px 16px;display:flex;flex-direction:column">
+    <div style="max-width:580px;margin:0 auto;width:100%;flex:1;display:flex;flex-direction:column">
+      <div style="display:flex;align-items:center;gap:14px;margin-bottom:10px">
+        <button onclick="renderThemedMenu()" style="background:none;border:none;color:#888;font-size:28px;cursor:pointer">←</button>
+        <div>
+          <div style="font-size:16px;color:#a78bfa;font-weight:600">${theme.emoji} ${theme.label}</div>
+          <div style="font-size:11px;color:#555">${theme.unit} · ${theme.desc.slice(0,50)}...</div>
+        </div>
+      </div>
+      <div style="flex:1;overflow-y:auto;display:flex;flex-direction:column;margin-bottom:14px;max-height:55vh">
+        ${msgs}
+      </div>
+      <div style="display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap">
+        <button onclick="toggleArabicKb()" id="kb-toggle" style="padding:7px 12px;border-radius:10px;border:1px solid rgba(167,139,250,.4);background:rgba(167,139,250,.1);color:#a78bfa;font-size:12px;cursor:pointer">⌨️ Teclat àrab</button>
+      </div>
+      <div id="arabic-kb" style="display:none;background:rgba(255,255,255,.05);border:1px solid #333;border-radius:14px;padding:10px;margin-bottom:10px;direction:rtl">
+        <div style="display:flex;flex-wrap:wrap;gap:5px;justify-content:center;margin-bottom:6px">
+          ${document.getElementById('arabic-kb') ? document.getElementById('arabic-kb').innerHTML : ''}
+        </div>
+      </div>
+      <div style="display:flex;gap:10px;margin-bottom:10px">
+        <input type="text" id="themed-input" placeholder="Respon en àrab o català..." onkeydown="if(event.key==='Enter')sendThemedChat('${theme.id}','${systemPrompt.replace(/'/g,'\'').replace(/
+/g,' ')}')" style="flex:1;padding:14px 16px;border-radius:14px;border:1px solid rgba(167,139,250,.4);background:rgba(255,255,255,.06);color:#fff;font-size:17px;font-family:Arial,sans-serif;direction:auto">
+        <button onclick="sendThemedChat('${theme.id}',themedSystemPrompt)" style="padding:14px 18px;border-radius:14px;border:none;background:linear-gradient(90deg,#7c3aed,#ec4899);color:#fff;font-size:20px;cursor:pointer">➤</button>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">${quickBtns}</div>
+    </div>
+  </div>`;
+
+  // Store system prompt globally for reuse
+  window.themedSystemPrompt = systemPrompt;
+}
+
+function setThemedInput(text){
+  const inp = document.getElementById('themed-input');
+  if(inp) inp.value = text;
+}
+
+async function sendThemedChat(themeId, sysPrompt){
+  const inp = document.getElementById('themed-input');
+  if(!inp || !inp.value.trim()) return;
+  const userText = inp.value.trim();
+  inp.value = '';
+  chatHistory.push({role:"user", text:userText});
+
+  const theme = CONVERSATION_THEMES.find(t => t.id === themeId) || CONVERSATION_THEMES[0];
+  const systemPrompt = window.themedSystemPrompt || sysPrompt;
+
+  // Re-render with loading indicator
+  const histForAI = chatHistory.map(m => ({role: m.role === "assistant" ? "assistant" : "user", content: m.text}));
+
+  try {
+    const reply = await callAI(systemPrompt, null, histForAI);
+    chatHistory.push({role:"assistant", text:reply});
+  } catch(e) {
+    if(e.message === "No API key" || e.message === "Invalid API key") return;
+    chatHistory.push({role:"assistant", text:"Error: " + e.message});
+  }
+  renderThemedChat(theme, systemPrompt);
+}
+
+// ── ARABIC KEYBOARD ──────────────────────────────────────────────────────
+function toggleArabicKb(){
+  const kb = document.getElementById('arabic-kb');
+  const btn = document.getElementById('kb-toggle');
+  if(!kb) return;
+  const isOpen = kb.style.display !== 'none';
+  kb.style.display = isOpen ? 'none' : 'block';
+  if(btn) btn.style.background = isOpen ? 'rgba(167,139,250,.1)' : 'rgba(167,139,250,.25)';
+}
+function insertChar(ch){
+  const inp = document.getElementById('chat-input');
+  if(!inp) return;
+  const s = inp.selectionStart, e = inp.selectionEnd;
+  inp.value = inp.value.slice(0,s) + ch + inp.value.slice(e);
+  inp.selectionStart = inp.selectionEnd = s + ch.length;
+  inp.focus();
+}
+function deleteChar(){
+  const inp = document.getElementById('chat-input');
+  if(!inp || inp.selectionStart === 0) return;
+  const s = inp.selectionStart;
+  inp.value = inp.value.slice(0,s-1) + inp.value.slice(s);
+  inp.selectionStart = inp.selectionEnd = s-1;
+  inp.focus();
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+// SYNONYMS & ANTONYMS
+// ══════════════════════════════════════════════════════════════════════════
+let synMode = "both"; // both|syn|ant
+let synSearch = "";
+let synGameState = null; // {deck, idx, score, total, current, answered, selectedOpt}
+
+function renderSynMenu(){
+  const totalSyn = synAntData.synonyms.length;
+  const totalAnt = synAntData.antonyms.length;
+  document.getElementById("screen-syn").innerHTML=`
+  <div style="min-height:100vh;background:linear-gradient(135deg,#0f0c29,#302b63,#24243e);padding:24px 16px">
+    <div style="max-width:560px;margin:0 auto">
+      <div style="display:flex;align-items:center;gap:14px;margin-bottom:24px">
+        <button onclick="showScreen('menu');renderMenu()" style="background:none;border:none;color:#888;font-size:28px;cursor:pointer">←</button>
+        <h2 style="font-size:24px;background:linear-gradient(90deg,#10b981,#06b6d4);-webkit-background-clip:text;-webkit-text-fill-color:transparent">🔄 Sinònims i Antònims</h2>
+      </div>
+      <p style="color:#666;font-size:14px;margin-bottom:20px;line-height:1.6">${totalSyn} parells de sinònims (مُرَادِف) · ${totalAnt} parells d'antònims (ضِدّ)</p>
+
+      <div style="margin-bottom:14px">
+        <div style="font-size:12px;letter-spacing:2px;color:#10b981;text-transform:uppercase;margin-bottom:10px">Mode</div>
+        <div class="row">
+          <button class="seg-btn ${synMode==='both'?'active-y':''}" onclick="synMode='both';renderSynMenu()" style="border-color:${synMode==='both'?'#10b981':'#444'};color:${synMode==='both'?'#10b981':'#888'};background:${synMode==='both'?'rgba(16,185,129,.12)':'rgba(255,255,255,.05)'}">Tot</button>
+          <button class="seg-btn ${synMode==='syn'?'active-y':''}" onclick="synMode='syn';renderSynMenu()" style="border-color:${synMode==='syn'?'#06b6d4':'#444'};color:${synMode==='syn'?'#06b6d4':'#888'};background:${synMode==='syn'?'rgba(6,182,212,.12)':'rgba(255,255,255,.05)'}">Sinònims</button>
+          <button class="seg-btn ${synMode==='ant'?'active-y':''}" onclick="synMode='ant';renderSynMenu()" style="border-color:${synMode==='ant'?'#f59e0b':'#444'};color:${synMode==='ant'?'#f59e0b':'#888'};background:${synMode==='ant'?'rgba(245,158,11,.12)':'rgba(255,255,255,.05)'}">Antònims</button>
+        </div>
+      </div>
+
+      <button onclick="startSynGame()" style="width:100%;padding:20px;border-radius:18px;border:none;background:linear-gradient(90deg,#10b981,#06b6d4);color:#0f0c29;font-weight:700;font-size:20px;cursor:pointer;letter-spacing:1px;box-shadow:0 4px 28px rgba(16,185,129,.3);margin-bottom:14px">🎯 Joc d'endevinar</button>
+      <button onclick="renderSynList()" style="width:100%;padding:15px;border-radius:18px;border:2px solid rgba(16,185,129,.4);background:rgba(16,185,129,.06);color:#34d399;font-size:16px;cursor:pointer;font-weight:600">📋 Llista d'estudi</button>
+    </div>
+  </div>`;
+}
+
+function getSynPool(){
+  if(synMode==='syn') return synAntData.synonyms.map(p=>({...p,type:'syn'}));
+  if(synMode==='ant') return synAntData.antonyms.map(p=>({...p,type:'ant'}));
+  return [
+    ...synAntData.synonyms.map(p=>({...p,type:'syn'})),
+    ...synAntData.antonyms.map(p=>({...p,type:'ant'}))
+  ];
+}
+
+function startSynGame(){
+  const pool = shuffle(getSynPool());
+  const deck = pool.map(pair => {
+    const showFirst = Math.random()>.5;
+    const question = showFirst ? pair.ar1 : pair.ar2;
+    const answer = showFirst ? pair.ar2 : pair.ar1;
+    const answerCa = showFirst ? pair.ca2 : pair.ca1;
+    // Generate 3 wrong options from same type
+    const sameType = pair.type==='syn' ? synAntData.synonyms : synAntData.antonyms;
+    const wrongs = shuffle(sameType.filter(p=>p.ar1!==pair.ar1))
+      .slice(0,3)
+      .map(p=>Math.random()>.5?p.ar1:p.ar2);
+    const options = shuffle([answer, ...wrongs]);
+    return {question, answer, answerCa, type:pair.type, en:pair.en, options, questionCa:showFirst?pair.ca1:pair.ca2};
+  });
+  synGameState = {deck, idx:0, score:0, total:deck.length, answered:false, selectedOpt:null};
+  renderSynGame();
+}
+
+function renderSynGame(){
+  const el=document.getElementById("screen-syn");
+  const gs=synGameState;
+  if(!gs||gs.idx>=gs.total){renderSynGameDone();return;}
+  const card=gs.deck[gs.idx];
+  const pct=(gs.idx/gs.total)*100;
+  const typeLabel=card.type==='syn'?'مُرَادِف · Sinònim':'ضِدّ · Antònim';
+  const typeColor=card.type==='syn'?'#06b6d4':'#f59e0b';
+  const questionText=card.type==='syn'?'Quin és el <strong style="color:#06b6d4">sinònim</strong>?':'Quin és l\'<strong style="color:#f59e0b">antònim</strong>?';
+
+  const optsHtml=card.options.map(opt=>{
+    let bg='rgba(255,255,255,.05)',border='1px solid #444',color='#ccc';
+    if(gs.answered){
+      if(opt===card.answer){bg='rgba(74,222,128,.15)';border='1px solid #4ade80';color='#4ade80';}
+      else if(opt===gs.selectedOpt&&opt!==card.answer){bg='rgba(248,113,113,.15)';border='1px solid #f87171';color='#f87171';}
+    }else if(opt===gs.selectedOpt){bg='rgba(16,185,129,.2)';border='1px solid #10b981';color='#10b981';}
+    return `<button onclick="${gs.answered?'':`selectSynOpt('${opt.replace(/'/g,"\\'")}')`}" class="ar" style="padding:16px;border-radius:14px;border:${border};background:${bg};color:${color};font-size:26px;cursor:${gs.answered?'default':'pointer'};width:100%;text-align:center;direction:rtl;line-height:1.4">${opt}</button>`;
+  }).join("");
+
+  const feedbackHtml=gs.answered
+    ?`<div style="margin-top:14px;padding:14px;border-radius:14px;background:${gs.selectedOpt===card.answer?'rgba(74,222,128,.1)':'rgba(248,113,113,.1)'};border:1px solid ${gs.selectedOpt===card.answer?'rgba(74,222,128,.3)':'rgba(248,113,113,.3)'}">
+        <div style="color:${gs.selectedOpt===card.answer?'#4ade80':'#f87171'};font-size:16px;font-weight:700;margin-bottom:6px">${gs.selectedOpt===card.answer?'✓ Correcte!':'✗ Incorrecte'}</div>
+        <div style="color:#aaa;font-size:14px">${card.en}</div>
+      </div>
+      <button onclick="nextSynCard()" style="margin-top:14px;width:100%;padding:16px;border-radius:16px;border:none;background:linear-gradient(90deg,#10b981,#06b6d4);color:#0f0c29;font-weight:700;font-size:18px;cursor:pointer">${gs.idx+1>=gs.total?'Veure resultats':'Següent →'}</button>`
+    :`<button onclick="checkSynAnswer()" style="margin-top:14px;width:100%;padding:16px;border-radius:16px;border:none;background:linear-gradient(90deg,#10b981,#06b6d4);color:#0f0c29;font-weight:700;font-size:18px;cursor:pointer;opacity:${gs.selectedOpt?1:0.4}">Comprovar</button>`;
+
+  el.innerHTML=`
+  <div style="min-height:100vh;background:linear-gradient(135deg,#0f0c29,#302b63,#24243e);padding:24px 16px">
+    <div style="max-width:520px;margin:0 auto">
+      <div style="display:flex;align-items:center;gap:14px;margin-bottom:16px">
+        <button onclick="renderSynMenu()" style="background:none;border:none;color:#888;font-size:28px;cursor:pointer">←</button>
+        <div class="grad-bar" style="flex:1"><div style="height:100%;background:linear-gradient(90deg,#10b981,#06b6d4);border-radius:4px;transition:width .3s;width:${pct}%"></div></div>
+        <span style="color:#888;font-size:17px">${gs.idx+1}/${gs.total}</span>
+      </div>
+      <div style="text-align:center;margin-bottom:12px">
+        <span style="font-size:12px;letter-spacing:1px;border:1px solid ${typeColor};color:${typeColor};border-radius:20px;padding:4px 14px">${typeLabel}</span>
+      </div>
+      <div class="card" style="border-color:rgba(16,185,129,.2)">
+        <div style="text-align:center;margin-bottom:16px">
+          <div class="ar" style="font-size:46px;color:#fff;line-height:1.4;margin-bottom:6px">${card.question}</div>
+          <div style="font-size:14px;color:#666;font-style:italic">${card.questionCa}</div>
+          <button onclick="speakAr('${card.question.replace(/'/g,"\\'")}')" style="margin-top:6px;background:none;border:none;font-size:18px;cursor:pointer;color:#10b981">🔈</button>
+        </div>
+        <div style="font-size:15px;color:#aaa;text-align:center;margin-bottom:16px">${questionText}</div>
+        <div style="display:flex;flex-direction:column;gap:10px">${optsHtml}</div>
+        ${feedbackHtml}
+      </div>
+      <div style="text-align:center;margin-top:12px;color:#555;font-size:14px">Puntuació: ${gs.score}/${gs.idx}</div>
+    </div>
+  </div>`;
+}
+
+function selectSynOpt(opt){
+  if(!synGameState||synGameState.answered)return;
+  synGameState.selectedOpt=opt;
+  renderSynGame();
+}
+function checkSynAnswer(){
+  if(!synGameState||!synGameState.selectedOpt)return;
+  synGameState.answered=true;
+  if(synGameState.selectedOpt===synGameState.deck[synGameState.idx].answer)synGameState.score++;
+  renderSynGame();
+}
+function nextSynCard(){
+  synGameState.idx++;
+  synGameState.answered=false;
+  synGameState.selectedOpt=null;
+  renderSynGame();
+}
+function renderSynGameDone(){
+  const gs=synGameState;
+  const pct=Math.round((gs.score/gs.total)*100);
+  const emoji=pct>=80?'🏆':pct>=60?'👍':pct>=40?'💪':'📚';
+  document.getElementById("screen-syn").innerHTML=`
+  <div style="min-height:100vh;background:linear-gradient(135deg,#0f0c29,#302b63,#24243e);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px">
+    <div style="font-size:72px">${emoji}</div>
+    <h2 style="font-size:32px;margin:16px 0 8px;background:linear-gradient(90deg,#10b981,#06b6d4);-webkit-background-clip:text;-webkit-text-fill-color:transparent">${gs.score} / ${gs.total}</h2>
+    <p style="color:#aaa;font-size:18px">${pct}% correctes</p>
+    <div style="display:flex;gap:12px;margin-top:28px">
+      <button onclick="startSynGame()" style="padding:16px 28px;border-radius:16px;border:none;background:linear-gradient(90deg,#10b981,#06b6d4);color:#0f0c29;font-weight:700;font-size:16px;cursor:pointer">🔄 Repetir</button>
+      <button onclick="renderSynMenu()" style="padding:16px 28px;border-radius:16px;border:2px solid #444;background:transparent;color:#888;font-size:16px;cursor:pointer">← Menú</button>
+    </div>
+  </div>`;
+}
+
+// ── SYNONYM/ANTONYM LIST ─────────────────────────────────────────────────
+function renderSynList(){
+  const el=document.getElementById("screen-syn");
+  const pool=getSynPool();
+  const filtered=pool.filter(p=>{
+    if(!synSearch)return true;
+    const s=synSearch.toLowerCase();
+    return p.ar1.includes(synSearch)||p.ar2.includes(synSearch)||p.ca1.toLowerCase().includes(s)||p.ca2.toLowerCase().includes(s)||p.en.toLowerCase().includes(s);
+  });
+
+  const syns=filtered.filter(p=>p.type==='syn');
+  const ants=filtered.filter(p=>p.type==='ant');
+
+  function pairCard(p){
+    const color=p.type==='syn'?'#06b6d4':'#f59e0b';
+    const borderColor=p.type==='syn'?'rgba(6,182,212,.2)':'rgba(245,158,11,.2)';
+    const symbol=p.type==='syn'?'=':'≠';
+    return `<div style="background:rgba(255,255,255,.04);border:1px solid ${borderColor};border-radius:16px;padding:14px 16px">
+      <div style="display:flex;align-items:center;gap:10px;justify-content:center;flex-wrap:wrap">
+        <div style="text-align:center;flex:1;min-width:100px">
+          <div class="ar" style="font-size:28px;color:#fff;line-height:1.4">${p.ar1}</div>
+          <div style="font-size:13px;color:#888;margin-top:2px">${p.ca1}</div>
+          <button onclick="speakAr('${p.ar1.replace(/'/g,"\\'")}')" style="background:none;border:none;color:${color};font-size:14px;cursor:pointer;margin-top:2px">🔈</button>
+        </div>
+        <div style="font-size:28px;color:${color};font-weight:700">${symbol}</div>
+        <div style="text-align:center;flex:1;min-width:100px">
+          <div class="ar" style="font-size:28px;color:#fff;line-height:1.4">${p.ar2}</div>
+          <div style="font-size:13px;color:#888;margin-top:2px">${p.ca2}</div>
+          <button onclick="speakAr('${p.ar2.replace(/'/g,"\\'")}')" style="background:none;border:none;color:${color};font-size:14px;cursor:pointer;margin-top:2px">🔈</button>
+        </div>
+      </div>
+    </div>`;
+  }
+
+  let content='';
+  if(synMode!=='ant'&&syns.length>0){
+    content+=`<div style="font-size:12px;letter-spacing:2px;color:#06b6d4;text-transform:uppercase;margin:16px 0 10px">مُرَادِف · Sinònims (${syns.length})</div>`;
+    content+=syns.map(pairCard).join("");
+  }
+  if(synMode!=='syn'&&ants.length>0){
+    content+=`<div style="font-size:12px;letter-spacing:2px;color:#f59e0b;text-transform:uppercase;margin:16px 0 10px">ضِدّ · Antònims (${ants.length})</div>`;
+    content+=ants.map(pairCard).join("");
+  }
+
+  el.innerHTML=`
+  <div style="min-height:100vh;background:linear-gradient(135deg,#0f0c29,#302b63,#24243e);padding:24px 16px">
+    <div style="max-width:640px;margin:0 auto">
+      <div style="display:flex;align-items:center;gap:14px;margin-bottom:18px">
+        <button onclick="renderSynMenu()" style="background:none;border:none;color:#888;font-size:28px;cursor:pointer">←</button>
+        <h2 style="font-size:22px;background:linear-gradient(90deg,#10b981,#06b6d4);-webkit-background-clip:text;-webkit-text-fill-color:transparent">Llista d'estudi</h2>
+      </div>
+      <input type="text" value="${synSearch}" oninput="synSearch=this.value;renderSynList()" placeholder="Cerca..." style="width:100%;padding:11px 14px;border-radius:12px;border:1px solid #444;background:rgba(255,255,255,.06);color:#fff;font-size:16px;margin-bottom:6px">
+      <div style="display:flex;flex-direction:column;gap:10px">${content}</div>
+    </div>
+  </div>`;
 }
 
 // ══════════════════════════════════════════════════════════════════════════
