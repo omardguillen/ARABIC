@@ -925,45 +925,8 @@ async function startAIActivity(id){
 
   try{
     if(id==="story"){
-      const txt=await callAI(
-        `Ets un professor d'àrab. ${VOCAB_SHORT}
-Escriu un conte de 4-5 frases en àrab MSA. Vocabulari conegut + màx 1 paraula nova per frase.
-
-TEMA ALEATORI - tria UNA opció cada vegada i canvia-la:
-1. Drama familiar: secret, discussió, promesa trencada
-2. Situació còmica: accident, confusió, malentès
-3. Misteri: soroll nocturn, objecte desaparegut, veí estrany
-4. Mercat: preu injust, venedor insistent, sorpresa
-5. Visita mèdica: símptomes estranys, remei sorprenent
-6. Escola: trampa que falla, nota inesperada
-7. Esport: lesió al moment clau, victòria o derrota
-8. Cuina: recepta fallida, ingredient equivocat
-9. Amor: cita nerviosa, missatge enviat a qui no toca
-10. Feina: presentació catastròfica, client difícil
-11. Transport: bus perdut, taxi estrany, cotxe espatllat
-12. Veïns: soroll molest, paquet equivocat, festa
-13. Tecnologia: mòbil mort, contrasenya oblidada, foto publicada per error
-14. Natura: excursió perduda, animal inesperat, tempesta
-15. Festa: regal equivocat, discurs desastrós, convidat inesperat
-16. Memòria: aniversari oblidat, claus perdudes
-17. Compres: producte diferent, retorn complicat
-18. Amistats: amic del passat, promesa d'infància
-19. Salut i hàbits: dieta que falla, remei casolà
-20. Somnis: despertar confós, deja vu
-
-NOMS - usa NOMS VARIATS, mai Fatima ni Ahmad com a protagonistes:
-Khalid, Layla, Yusuf, Sara, Hassan, Nour, Mariam, Tariq, Zainab, Bilal, Rania, Samira, Karim, Lina, Aisha, Jamal, Hana, Sami, Dina, Walid, Rana, Faris, Mona, Salma, Huda, Rim
-
-FINALS: mai feliç previsible. Pot ser: sorprenent, ambigu, còmic, trist, irònic.
-
-Respon NOMÉS en JSON sense backticks:
-{"theme":"tema triat","sentences":[{"ar":"frase","ca":"traducció","words":[{"ar":"mot","ca":"trad"},...]}]}
-Totes les paraules de cada frase han d'aparèixer a "words" en ordre.
-IMPORTANT: escriu TOT l'àrab amb vocalització completa (tashkil): fatha َ kasra ِ damma ُ shadda ّ sukun ْ. Sense excepció.`,
-        "Genera un conte curt i interessant sobre la vida quotidiana o un viatge."
-      );
-      aiContent=JSON.parse(txt.replace(/```json|```/g,"").trim());
-      renderStory();
+      renderStoryMenu();
+      return;
 
     }else if(id==="fill"){
       const txt=await callAI(
@@ -1040,6 +1003,123 @@ function aiHeader(title){
 }
 
 // ── STORY ──
+const STORY_THEMES = [
+  {id:"family",   emoji:"👨‍👩‍👧‍👦", label:"Família",       desc:"Secrets, reunions, discussions, promeses, avis, fills, germans.", vocab:"família, casa, emocions, relacions"},
+  {id:"market",   emoji:"🛒",  label:"Al mercat",     desc:"Regateig, venedors, preus, productes, confusions amb el canvi.", vocab:"compres, menjar, números, expressions"},
+  {id:"health",   emoji:"🏥",  label:"Salut",         desc:"Metge, símptomes estranys, hospital, remeis, dietes.", vocab:"salut, cos humà, menjar, emocions"},
+  {id:"travel",   emoji:"✈️",  label:"Viatge",        desc:"Aeroport, maletes perdudes, passaport, vols, hotels.", vocab:"viatge, aeroport, transport, direccions"},
+  {id:"school",   emoji:"🏫",  label:"Escola",        desc:"Exàmens, professors, classe, notes, trampes.", vocab:"escola, professions, expressions"},
+  {id:"cooking",  emoji:"🍳",  label:"Cuina",         desc:"Receptes fallides, ingredients equivocats, restaurants.", vocab:"menjar, begudes, casa, imperatius"},
+  {id:"sport",    emoji:"⚽",  label:"Esport",        desc:"Partits, victòria, derrota, lesions, entrenament.", vocab:"esport, hobbies, cos humà, emocions"},
+  {id:"home",     emoji:"🏠",  label:"Veïns i casa",  desc:"Sorolls, paquets equivocats, mudances, reparacions.", vocab:"casa, habitatge, expressions, emocions"},
+  {id:"weather",  emoji:"🌧️",  label:"Temps i natura", desc:"Tempestes, excursions, plans cancel·lats, estacions.", vocab:"temps meteorològic, natura, roba, expressions"},
+  {id:"work",     emoji:"💼",  label:"Feina",         desc:"Entrevistes, clients difícils, errors a l'oficina.", vocab:"treball, professions, expressions, emocions"},
+  {id:"religion", emoji:"🕌",  label:"Religió",       desc:"Mesquita, pregària, hajj, umra, festes religioses.", vocab:"religió, viatge, expressions, família"},
+  {id:"vacation", emoji:"🏖️",  label:"Vacances",      desc:"Platja, muntanya, poble, camping, plans d'estiu.", vocab:"vacances, natura, viatge, menjar"},
+  {id:"tech",     emoji:"📱",  label:"Tecnologia",    desc:"Mòbil mort, contrasenya oblidada, foto publicada per error.", vocab:"tecnologia, expressions, emocions"},
+  {id:"friends",  emoji:"🤝",  label:"Amistats",      desc:"Amic del passat, promeses, festes, malentesos.", vocab:"emocions, expressions, hobbies, menjar"},
+  {id:"mystery",  emoji:"🔍",  label:"Misteri",       desc:"Sorolls nocturns, objectes desapareguts, veí estrany.", vocab:"casa, emocions, expressions, temps"},
+  {id:"love",     emoji:"💌",  label:"Amor",          desc:"Cites nervioses, missatges enviats a qui no toca, regals.", vocab:"emocions, expressions, menjar, roba"},
+];
+let currentStoryTheme = null;
+
+function renderStoryMenu(){
+  showScreen("ai-activity");
+  const cards = STORY_THEMES.map(t => `
+    <button onclick="generateStory('${t.id}')" style="padding:14px 16px;border-radius:16px;border:1px solid rgba(167,139,250,.25);background:rgba(167,139,250,.06);text-align:left;cursor:pointer;width:100%;transition:background .2s"
+      onmouseover="this.style.background='rgba(167,139,250,.14)'" onmouseout="this.style.background='rgba(167,139,250,.06)'">
+      <div style="display:flex;align-items:center;gap:10px">
+        <span style="font-size:22px">${t.emoji}</span>
+        <span style="color:#c4b5fd;font-weight:700;font-size:15px">${t.label}</span>
+      </div>
+      <div style="color:#666;font-size:12px;line-height:1.4;padding-left:32px;margin-top:2px">${t.desc}</div>
+    </button>`).join("");
+  document.getElementById("screen-ai-activity").innerHTML = `
+  <div style="min-height:100vh;background:linear-gradient(135deg,#0f0c29,#302b63,#24243e);padding:24px 16px;overflow-y:auto">
+    <div style="max-width:560px;margin:0 auto">
+      <div style="display:flex;align-items:center;gap:14px;margin-bottom:20px">
+        <button onclick="showScreen('ai');renderAIMenu()" style="background:none;border:none;color:#888;font-size:28px;cursor:pointer">←</button>
+        <h2 style="font-size:20px;color:#a78bfa">📖 Conte generat</h2>
+      </div>
+      <p style="color:#666;font-size:13px;margin-bottom:14px;line-height:1.5">Tria un tema pel conte o deixa que la IA inventi alguna cosa inesperada.</p>
+      <button onclick="generateStory('random')" style="width:100%;padding:18px;border-radius:16px;border:none;background:linear-gradient(90deg,#7c3aed,#ec4899);color:#fff;font-weight:700;font-size:17px;cursor:pointer;margin-bottom:16px">
+        🎲 Aleatori (tema sorpresa)
+      </button>
+      <div style="display:flex;flex-direction:column;gap:10px">${cards}</div>
+    </div>
+  </div>`;
+}
+
+async function generateStory(themeId){
+  currentStoryTheme = themeId;
+  currentActivity = "story";
+  showAILoading("conte");
+  const seed = Math.floor(Math.random()*10000);
+  const names = ["Khalid","Layla","Yusuf","Sara","Hassan","Nour","Mariam","Tariq","Zainab","Bilal","Rania","Samira","Karim","Lina","Jamal","Hana","Sami","Dina","Walid","Rana","Faris","Mona","Salma","Huda","Rim"];
+  const shuffledNames = names.sort(()=>Math.random()-.5);
+  const protagonist = shuffledNames[0];
+  const secondary = shuffledNames[1];
+  let themeInstruction;
+  if(themeId === 'random'){
+    const randomIdeas = [
+      "Un malentès còmic entre dues persones que no parlen el mateix dialecte",
+      "Algú es desperta en un lloc que no reconeix",
+      "Un regal misteriós arriba sense remitent",
+      "Una recepta secreta de l'àvia que ningú pot reproduir",
+      "Un animal entra en un lloc inesperat",
+      "Dues persones es troben després de molts anys",
+      "Un examen amb una pregunta impossible",
+      "Una tempesta que canvia els plans de tothom",
+      "Un error al telèfon que porta a una aventura",
+      "Una competició absurda entre veïns",
+      "Un somni que es barreja amb la realitat",
+      "Una carta antiga trobada dins d'un llibre",
+      "Un viatge en tren amb un company de seient estrany",
+      "Un plat cuinat que causa una reacció inesperada",
+      "Una visita al metge amb un diagnòstic sorprenent",
+      "Un primer dia de feina desastrós",
+      "Una festa on tot surt malament",
+      "Un secret de família revelat per accident",
+      "Una aposta entre amics amb conseqüències inesperades",
+      "Un objecte perdut que apareix en el lloc més absurd",
+    ];
+    const idea = randomIdeas[Math.floor(Math.random()*randomIdeas.length)];
+    themeInstruction = `TEMA: Inventa un conte ORIGINAL i CREATIU. Inspiració (NO la copiïs literalment, usa-la com a punt de partida): "${idea}". Seed: ${seed}. Barreja elements de categories diferents del vocabulari.`;
+  } else {
+    const theme = STORY_THEMES.find(t=>t.id===themeId);
+    themeInstruction = `TEMA OBLIGATORI: ${theme.emoji} ${theme.label} — ${theme.desc}. Usa principalment vocabulari de: ${theme.vocab}. Seed: ${seed}.`;
+  }
+  try{
+    const txt = await callAI(
+      `Ets un professor d'àrab creatiu. ${VOCAB_SHORT}
+Escriu un conte de 4-5 frases en àrab MSA. Vocabulari conegut + màx 1 paraula nova per frase.
+${themeInstruction}
+Protagonista: ${protagonist}. Personatge secundari: ${secondary}.
+REGLES IMPORTANTS:
+- NO escriguis MAI sobre taxis, ni sobre conductors de taxi. PROHIBIT.
+- El conte ha de ser ÚNIC i DIFERENT cada vegada. Seed aleatòria: ${seed}.
+- Final: MAI feliç previsible. Pot ser: sorprenent, ambigu, còmic, trist, irònic, absurd.
+- Fes servir TOTS els temps verbals que coneixes: present, passat, futur (سـ), imperatiu.
+Respon NOMÉS en JSON sense backticks:
+{"theme":"tema del conte en català","sentences":[{"ar":"frase","ca":"traducció","words":[{"ar":"mot","ca":"trad"},...]}]}
+Totes les paraules de cada frase han d'aparèixer a "words" en ordre.
+IMPORTANT: escriu TOT l'àrab amb vocalització completa (tashkil): fatha َ kasra ِ damma ُ shadda ّ sukun ْ. Sense excepció.`,
+      `Genera un conte curt. Seed: ${seed}. Protagonista: ${protagonist}.`
+    );
+    aiContent = JSON.parse(txt.replace(/```json|```/g,"").trim());
+    renderStory();
+  }catch(e){
+    if(e.message === "No API key" || e.message === "Invalid API key") return;
+    document.getElementById("screen-ai-activity").innerHTML=`
+    <div style="min-height:100vh;background:linear-gradient(135deg,#0f0c29,#302b63,#24243e);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px">
+      <div style="color:#f87171;font-size:18px;text-align:center;margin-bottom:12px">Error generant el conte</div>
+      <div style="color:#666;font-size:13px;text-align:center;max-width:340px;word-break:break-all;margin-bottom:20px;font-family:monospace">${e.message}</div>
+      <button onclick="generateStory('${themeId}')" style="margin-bottom:10px;padding:14px 28px;border-radius:14px;border:none;background:#7c3aed;color:#fff;font-size:16px;cursor:pointer">🔄 Tornar a intentar</button>
+      <button onclick="renderStoryMenu()" style="padding:10px 20px;border-radius:12px;border:1px solid #444;background:transparent;color:#888;font-size:14px;cursor:pointer">← Tornar als temes</button>
+    </div>`;
+  }
+}
+
 function renderStory(){
   if(!aiContent||!aiContent.sentences){return;}
 
@@ -1077,7 +1157,11 @@ function renderStory(){
   </style>
   <div style="min-height:100vh;background:linear-gradient(135deg,#0f0c29,#302b63,#24243e);padding:24px 16px">
     <div style="max-width:580px;margin:0 auto">
-      ${aiHeader("📖 Conte generat")}
+      <div style="display:flex;align-items:center;gap:14px;margin-bottom:20px">
+        <button onclick="renderStoryMenu()" style="background:none;border:none;color:#888;font-size:28px;cursor:pointer">←</button>
+        <h2 style="font-size:20px;color:#a78bfa">📖 Conte generat</h2>
+        <button onclick="generateStory(currentStoryTheme||'random')" style="margin-left:auto;padding:8px 14px;border-radius:12px;border:1px solid rgba(167,139,250,.4);background:rgba(167,139,250,.1);color:#a78bfa;font-size:13px;cursor:pointer">🔄 Nou</button>
+      </div>
       ${theme}
       <p style="color:#555;font-size:12px;text-align:center;margin-bottom:14px">💡 Clica cada paraula per veure la traducció</p>
       <div style="background:rgba(255,255,255,.05);border:1px solid rgba(167,139,250,.2);border-radius:20px;padding:24px 20px;margin-bottom:16px">
@@ -1190,7 +1274,7 @@ function renderChat(){
       const lines=m.text.split("\n");
       const arLine=`<div class="ar" style="font-size:20px;color:#fff;line-height:1.6">${lines[0]||""}</div>`;
       const rest=lines.slice(1).map(l=>`<div style="color:#aaa;font-size:13px;font-style:italic">${l}</div>`).join("");
-      const speakBtn=lines[0]?`<button onclick="speakAr(${JSON.stringify(lines[0])});this.textContent='🔊';setTimeout(()=>this.textContent='🔈',1800)" style="background:none;border:none;color:#555;font-size:16px;cursor:pointer;margin-top:4px">🔈</button>`:"";
+      const speakBtn=lines[0]?`<button onclick='speakAr(${JSON.stringify(lines[0]).replace(/'/g,"&#39;")});this.textContent="🔊";setTimeout(()=>this.textContent="🔈",1800)' style="background:none;border:none;color:#555;font-size:16px;cursor:pointer;margin-top:4px">🔈</button>`:"";
       return `<div style="display:flex;justify-content:flex-start">
         <div style="max-width:85%;padding:14px 16px;border-radius:18px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1)">
           ${arLine}${rest}${speakBtn}
@@ -1360,7 +1444,7 @@ function renderThemedChat(theme, systemPrompt){
       const lines = m.text.split("\n");
       const arLine = `<div class="ar" style="font-size:20px;color:#fff;line-height:1.7">${lines[0]||""}</div>`;
       const rest = lines.slice(1).map(l => `<div style="color:#aaa;font-size:13px;font-style:italic">${l}</div>`).join("");
-      const speakBtn = lines[0] ? `<button onclick="speakAr(${JSON.stringify(lines[0])});this.textContent='🔊';setTimeout(()=>this.textContent='🔈',1800)" style="background:none;border:none;color:#555;font-size:16px;cursor:pointer;margin-top:4px">🔈</button>` : "";
+      const speakBtn = lines[0] ? `<button onclick='speakAr(${JSON.stringify(lines[0]).replace(/'/g,"&#39;")});this.textContent="🔊";setTimeout(()=>this.textContent="🔈",1800)' style="background:none;border:none;color:#555;font-size:16px;cursor:pointer;margin-top:4px">🔈</button>` : "";
       return `<div style="display:flex;justify-content:flex-start;margin-bottom:10px">
         <div style="max-width:85%;padding:14px 16px;border-radius:18px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1)">
           ${arLine}${rest}${speakBtn}
@@ -1397,7 +1481,12 @@ function renderThemedChat(theme, systemPrompt){
       </div>
       <div id="arabic-kb" style="display:none;background:rgba(255,255,255,.05);border:1px solid #333;border-radius:14px;padding:10px;margin-bottom:10px;direction:rtl">
         <div style="display:flex;flex-wrap:wrap;gap:5px;justify-content:center;margin-bottom:6px">
-          ${document.getElementById('arabic-kb') ? document.getElementById('arabic-kb').innerHTML : ''}
+          <button onclick="insertChar('ض')" style="width:36px;height:36px;border-radius:8px;border:1px solid #444;background:rgba(255,255,255,.08);color:#fff;font-family:Arial,sans-serif;font-size:18px;cursor:pointer">ض</button><button onclick="insertChar('ص')" style="width:36px;height:36px;border-radius:8px;border:1px solid #444;background:rgba(255,255,255,.08);color:#fff;font-family:Arial,sans-serif;font-size:18px;cursor:pointer">ص</button><button onclick="insertChar('ث')" style="width:36px;height:36px;border-radius:8px;border:1px solid #444;background:rgba(255,255,255,.08);color:#fff;font-family:Arial,sans-serif;font-size:18px;cursor:pointer">ث</button><button onclick="insertChar('ق')" style="width:36px;height:36px;border-radius:8px;border:1px solid #444;background:rgba(255,255,255,.08);color:#fff;font-family:Arial,sans-serif;font-size:18px;cursor:pointer">ق</button><button onclick="insertChar('ف')" style="width:36px;height:36px;border-radius:8px;border:1px solid #444;background:rgba(255,255,255,.08);color:#fff;font-family:Arial,sans-serif;font-size:18px;cursor:pointer">ف</button><button onclick="insertChar('غ')" style="width:36px;height:36px;border-radius:8px;border:1px solid #444;background:rgba(255,255,255,.08);color:#fff;font-family:Arial,sans-serif;font-size:18px;cursor:pointer">غ</button><button onclick="insertChar('ع')" style="width:36px;height:36px;border-radius:8px;border:1px solid #444;background:rgba(255,255,255,.08);color:#fff;font-family:Arial,sans-serif;font-size:18px;cursor:pointer">ع</button><button onclick="insertChar('ه')" style="width:36px;height:36px;border-radius:8px;border:1px solid #444;background:rgba(255,255,255,.08);color:#fff;font-family:Arial,sans-serif;font-size:18px;cursor:pointer">ه</button><button onclick="insertChar('خ')" style="width:36px;height:36px;border-radius:8px;border:1px solid #444;background:rgba(255,255,255,.08);color:#fff;font-family:Arial,sans-serif;font-size:18px;cursor:pointer">خ</button><button onclick="insertChar('ح')" style="width:36px;height:36px;border-radius:8px;border:1px solid #444;background:rgba(255,255,255,.08);color:#fff;font-family:Arial,sans-serif;font-size:18px;cursor:pointer">ح</button><button onclick="insertChar('ج')" style="width:36px;height:36px;border-radius:8px;border:1px solid #444;background:rgba(255,255,255,.08);color:#fff;font-family:Arial,sans-serif;font-size:18px;cursor:pointer">ج</button><button onclick="insertChar('د')" style="width:36px;height:36px;border-radius:8px;border:1px solid #444;background:rgba(255,255,255,.08);color:#fff;font-family:Arial,sans-serif;font-size:18px;cursor:pointer">د</button><button onclick="insertChar('ذ')" style="width:36px;height:36px;border-radius:8px;border:1px solid #444;background:rgba(255,255,255,.08);color:#fff;font-family:Arial,sans-serif;font-size:18px;cursor:pointer">ذ</button><button onclick="insertChar('ر')" style="width:36px;height:36px;border-radius:8px;border:1px solid #444;background:rgba(255,255,255,.08);color:#fff;font-family:Arial,sans-serif;font-size:18px;cursor:pointer">ر</button><button onclick="insertChar('ز')" style="width:36px;height:36px;border-radius:8px;border:1px solid #444;background:rgba(255,255,255,.08);color:#fff;font-family:Arial,sans-serif;font-size:18px;cursor:pointer">ز</button><button onclick="insertChar('س')" style="width:36px;height:36px;border-radius:8px;border:1px solid #444;background:rgba(255,255,255,.08);color:#fff;font-family:Arial,sans-serif;font-size:18px;cursor:pointer">س</button><button onclick="insertChar('ش')" style="width:36px;height:36px;border-radius:8px;border:1px solid #444;background:rgba(255,255,255,.08);color:#fff;font-family:Arial,sans-serif;font-size:18px;cursor:pointer">ش</button><button onclick="insertChar('ط')" style="width:36px;height:36px;border-radius:8px;border:1px solid #444;background:rgba(255,255,255,.08);color:#fff;font-family:Arial,sans-serif;font-size:18px;cursor:pointer">ط</button><button onclick="insertChar('ظ')" style="width:36px;height:36px;border-radius:8px;border:1px solid #444;background:rgba(255,255,255,.08);color:#fff;font-family:Arial,sans-serif;font-size:18px;cursor:pointer">ظ</button><button onclick="insertChar('ل')" style="width:36px;height:36px;border-radius:8px;border:1px solid #444;background:rgba(255,255,255,.08);color:#fff;font-family:Arial,sans-serif;font-size:18px;cursor:pointer">ل</button><button onclick="insertChar('ا')" style="width:36px;height:36px;border-radius:8px;border:1px solid #444;background:rgba(255,255,255,.08);color:#fff;font-family:Arial,sans-serif;font-size:18px;cursor:pointer">ا</button><button onclick="insertChar('ت')" style="width:36px;height:36px;border-radius:8px;border:1px solid #444;background:rgba(255,255,255,.08);color:#fff;font-family:Arial,sans-serif;font-size:18px;cursor:pointer">ت</button><button onclick="insertChar('ن')" style="width:36px;height:36px;border-radius:8px;border:1px solid #444;background:rgba(255,255,255,.08);color:#fff;font-family:Arial,sans-serif;font-size:18px;cursor:pointer">ن</button><button onclick="insertChar('م')" style="width:36px;height:36px;border-radius:8px;border:1px solid #444;background:rgba(255,255,255,.08);color:#fff;font-family:Arial,sans-serif;font-size:18px;cursor:pointer">م</button><button onclick="insertChar('ك')" style="width:36px;height:36px;border-radius:8px;border:1px solid #444;background:rgba(255,255,255,.08);color:#fff;font-family:Arial,sans-serif;font-size:18px;cursor:pointer">ك</button><button onclick="insertChar('ي')" style="width:36px;height:36px;border-radius:8px;border:1px solid #444;background:rgba(255,255,255,.08);color:#fff;font-family:Arial,sans-serif;font-size:18px;cursor:pointer">ي</button><button onclick="insertChar('ب')" style="width:36px;height:36px;border-radius:8px;border:1px solid #444;background:rgba(255,255,255,.08);color:#fff;font-family:Arial,sans-serif;font-size:18px;cursor:pointer">ب</button><button onclick="insertChar('و')" style="width:36px;height:36px;border-radius:8px;border:1px solid #444;background:rgba(255,255,255,.08);color:#fff;font-family:Arial,sans-serif;font-size:18px;cursor:pointer">و</button><button onclick="insertChar('ة')" style="width:36px;height:36px;border-radius:8px;border:1px solid #444;background:rgba(255,255,255,.08);color:#fff;font-family:Arial,sans-serif;font-size:18px;cursor:pointer">ة</button><button onclick="insertChar('أ')" style="width:36px;height:36px;border-radius:8px;border:1px solid #444;background:rgba(255,255,255,.08);color:#fff;font-family:Arial,sans-serif;font-size:18px;cursor:pointer">أ</button><button onclick="insertChar('إ')" style="width:36px;height:36px;border-radius:8px;border:1px solid #444;background:rgba(255,255,255,.08);color:#fff;font-family:Arial,sans-serif;font-size:18px;cursor:pointer">إ</button><button onclick="insertChar('ئ')" style="width:36px;height:36px;border-radius:8px;border:1px solid #444;background:rgba(255,255,255,.08);color:#fff;font-family:Arial,sans-serif;font-size:18px;cursor:pointer">ئ</button><button onclick="insertChar('ؤ')" style="width:36px;height:36px;border-radius:8px;border:1px solid #444;background:rgba(255,255,255,.08);color:#fff;font-family:Arial,sans-serif;font-size:18px;cursor:pointer">ؤ</button><button onclick="insertChar('ء')" style="width:36px;height:36px;border-radius:8px;border:1px solid #444;background:rgba(255,255,255,.08);color:#fff;font-family:Arial,sans-serif;font-size:18px;cursor:pointer">ء</button>
+        </div>
+        <div style="display:flex;flex-wrap:wrap;gap:5px;justify-content:center">
+          <button onclick="insertChar('َ')" title="fatha" style="width:42px;height:36px;border-radius:8px;border:1px solid rgba(249,212,35,.4);background:rgba(249,212,35,.08);color:#f9d423;font-family:Arial,sans-serif;font-size:16px;cursor:pointer">ـَ</button><button onclick="insertChar('ِ')" title="kasra" style="width:42px;height:36px;border-radius:8px;border:1px solid rgba(249,212,35,.4);background:rgba(249,212,35,.08);color:#f9d423;font-family:Arial,sans-serif;font-size:16px;cursor:pointer">ـِ</button><button onclick="insertChar('ُ')" title="damma" style="width:42px;height:36px;border-radius:8px;border:1px solid rgba(249,212,35,.4);background:rgba(249,212,35,.08);color:#f9d423;font-family:Arial,sans-serif;font-size:16px;cursor:pointer">ـُ</button><button onclick="insertChar('ّ')" title="shadda" style="width:42px;height:36px;border-radius:8px;border:1px solid rgba(249,212,35,.4);background:rgba(249,212,35,.08);color:#f9d423;font-family:Arial,sans-serif;font-size:16px;cursor:pointer">ـّ</button><button onclick="insertChar('ْ')" title="sukun" style="width:42px;height:36px;border-radius:8px;border:1px solid rgba(249,212,35,.4);background:rgba(249,212,35,.08);color:#f9d423;font-family:Arial,sans-serif;font-size:16px;cursor:pointer">ـْ</button><button onclick="insertChar('ً')" title="tanwin fath" style="width:42px;height:36px;border-radius:8px;border:1px solid rgba(249,212,35,.4);background:rgba(249,212,35,.08);color:#f9d423;font-family:Arial,sans-serif;font-size:16px;cursor:pointer">ـً</button><button onclick="insertChar('ٍ')" title="tanwin kasr" style="width:42px;height:36px;border-radius:8px;border:1px solid rgba(249,212,35,.4);background:rgba(249,212,35,.08);color:#f9d423;font-family:Arial,sans-serif;font-size:16px;cursor:pointer">ـٍ</button><button onclick="insertChar('ٌ')" title="tanwin damm" style="width:42px;height:36px;border-radius:8px;border:1px solid rgba(249,212,35,.4);background:rgba(249,212,35,.08);color:#f9d423;font-family:Arial,sans-serif;font-size:16px;cursor:pointer">ـٌ</button>
+          <button onclick="deleteChar()" style="width:42px;height:36px;border-radius:8px;border:1px solid #555;background:rgba(248,113,113,.1);color:#f87171;font-size:16px;cursor:pointer">⌫</button>
+          <button onclick="insertChar(' ')" style="width:60px;height:36px;border-radius:8px;border:1px solid #444;background:rgba(255,255,255,.05);color:#aaa;font-size:12px;cursor:pointer">espai</button>
         </div>
       </div>
       <div style="display:flex;gap:10px;margin-bottom:10px">
@@ -1450,7 +1539,7 @@ function toggleArabicKb(){
   if(btn) btn.style.background = isOpen ? 'rgba(167,139,250,.1)' : 'rgba(167,139,250,.25)';
 }
 function insertChar(ch){
-  const inp = document.getElementById('chat-input');
+  const inp = document.getElementById('chat-input') || document.getElementById('themed-input');
   if(!inp) return;
   const s = inp.selectionStart, e = inp.selectionEnd;
   inp.value = inp.value.slice(0,s) + ch + inp.value.slice(e);
@@ -1458,7 +1547,7 @@ function insertChar(ch){
   inp.focus();
 }
 function deleteChar(){
-  const inp = document.getElementById('chat-input');
+  const inp = document.getElementById('chat-input') || document.getElementById('themed-input');
   if(!inp || inp.selectionStart === 0) return;
   const s = inp.selectionStart;
   inp.value = inp.value.slice(0,s-1) + inp.value.slice(s);
