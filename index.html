@@ -55,6 +55,9 @@ input[type=text]{outline:none;font-family:Arial,sans-serif}
 <div id="screen-ai" class="screen"></div>
 <div id="screen-ai-activity" class="screen"></div>
 <div id="screen-syn" class="screen"></div>
+<div id="screen-stats" class="screen"></div>
+<div id="screen-build" class="screen"></div>
+<div id="screen-dictation" class="screen"></div>
 
 <script>
 // ── DATA ──────────────────────────────────────────────────────────────────
@@ -499,6 +502,29 @@ function loadStats(){try{const r=localStorage.getItem(STORAGE_KEY);if(r)return J
 function saveStats(s){try{localStorage.setItem(STORAGE_KEY,JSON.stringify(s));}catch(e){}}
 let stats = loadStats();
 
+// ── VOCAB SPACED REPETITION ──────────────────────────────────────────────
+const VOCAB_STATS_KEY = "arabic_vocab_stats_v1";
+function loadVocabStats(){try{const r=localStorage.getItem(VOCAB_STATS_KEY);if(r)return JSON.parse(r);}catch(e){}return{};}
+function saveVocabStats(s){try{localStorage.setItem(VOCAB_STATS_KEY,JSON.stringify(s));}catch(e){}}
+let vocabStats = loadVocabStats();
+
+// ── ACTIVITY TRACKING ────────────────────────────────────────────────────
+const ACTIVITY_KEY = "arabic_activity_log_v1";
+function loadActivity(){try{const r=localStorage.getItem(ACTIVITY_KEY);if(r)return JSON.parse(r);}catch(e){}return{sessions:[],streak:0,lastDate:null};}
+function saveActivity(a){try{localStorage.setItem(ACTIVITY_KEY,JSON.stringify(a));}catch(e){}}
+function logSession(type){
+  const act=loadActivity();
+  const today=new Date().toISOString().slice(0,10);
+  act.sessions.push({date:today,type,ts:Date.now()});
+  if(act.lastDate===today){/* already counted */}
+  else{
+    const yesterday=new Date(Date.now()-86400000).toISOString().slice(0,10);
+    act.streak=(act.lastDate===yesterday)?act.streak+1:1;
+  }
+  act.lastDate=today;
+  saveActivity(act);
+}
+
 // ── STATE ─────────────────────────────────────────────────────────────────
 let tenseMode = "both";    // both|present|past
 let direction = "mix";     // ar→en|en→ar|mix
@@ -617,6 +643,9 @@ function renderMenu(){
       <button class="btn-outline" onclick="showScreen('list');renderList()">📋 Veure tots els verbs</button>
       <button class="btn-ai" onclick="showScreen('ai');renderAIMenu()">✨ Activitats amb IA</button>
       <button onclick="showScreen('syn');renderSynMenu()" style="padding:15px;border-radius:18px;border:2px solid #10b981;background:rgba(16,185,129,.08);color:#34d399;font-size:16px;cursor:pointer;font-weight:600;width:100%">🔄 Sinònims i Antònims</button>
+      <button onclick="showScreen('build');renderBuildMenu()" style="padding:15px;border-radius:18px;border:2px solid #f59e0b;background:rgba(245,158,11,.08);color:#fbbf24;font-size:16px;cursor:pointer;font-weight:600;width:100%">🧩 Construcció de frases</button>
+      <button onclick="showScreen('dictation');startDictation()" style="padding:15px;border-radius:18px;border:2px solid #ec4899;background:rgba(236,72,153,.08);color:#f472b6;font-size:16px;cursor:pointer;font-weight:600;width:100%">🎧 Dictat</button>
+      <button onclick="showScreen('stats');renderStats()" style="padding:15px;border-radius:18px;border:2px solid #06b6d4;background:rgba(6,182,212,.08);color:#22d3ee;font-size:16px;cursor:pointer;font-weight:600;width:100%">📊 Estadístiques</button>
       ${totalFails>0?`<div style="text-align:center;color:#444;font-size:12px">${totalFails} errors acumulats · ${fv.length} verbs pendents</div>`:""}
     </div>
   </div>`;
@@ -721,6 +750,7 @@ function answer(correct){
 }
 
 function renderGameDone(){
+  logSession(isDrill?'drill':'flashcards');
   document.getElementById("screen-game").innerHTML=`
   <div style="min-height:100vh;background:linear-gradient(135deg,#0f0c29,#302b63,#24243e);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px">
     <div style="font-size:72px">✅</div>
@@ -795,6 +825,8 @@ const AI_ACTIVITIES=[
   {id:"translate", icon:"🔄", title:"Traducció", desc:"Frases per traduir català↔àrab. Desveles la solució quan vulguis."},
   {id:"chat",  icon:"💬", title:"Conversa lliure", desc:"Conversa en àrab amb la IA. Et corregeix i t'ajuda."},
   {id:"themed", icon:"🎭", title:"Conversa temàtica", desc:"Tria un tema (mercat, metge, hobbies...) i practica una conversa real basada en les unitats del teu llibre."},
+  {id:"roleplay", icon:"🎯", title:"Roleplay amb objectius", desc:"Situació real amb una missió concreta. L'IA avalua si has completat l'objectiu."},
+  {id:"scene",  icon:"🖼️", title:"Descripció d'escena", desc:"L'IA descriu una escena en català. Tu la descrius en àrab i l'IA t'avalua."},
 ];
 
 const CONVERSATION_THEMES = [
@@ -992,6 +1024,11 @@ Format: línia en àrab \n (traducció al català entre parèntesis)`,
     }else if(id==="themed"){
       renderThemedMenu();
       return;
+    }else if(id==="roleplay"){
+      renderRoleplayMenu();
+      return;
+    }else if(id==="scene"){
+      await startSceneMode();
     }
   }catch(e){
     if(e.message === "No API key" || e.message === "Invalid API key") return;
@@ -1033,6 +1070,7 @@ const STORY_THEMES = [
   {id:"friends",  emoji:"🤝",  label:"Amistats",      desc:"Amic del passat, promeses, festes, malentesos.", vocab:"emocions, expressions, hobbies, menjar"},
   {id:"mystery",  emoji:"🔍",  label:"Misteri",       desc:"Sorolls nocturns, objectes desapareguts, veí estrany.", vocab:"casa, emocions, expressions, temps"},
   {id:"love",     emoji:"💌",  label:"Amor",          desc:"Cites nervioses, missatges enviats a qui no toca, regals.", vocab:"emocions, expressions, menjar, roba"},
+  {id:"hobbies",  emoji:"🎨",  label:"Hobbies",       desc:"Fotografia, lectura, esport, cuina, música, videojocs, jardineria.", vocab:"hobbies, esport, cultura, expressions"},
 ];
 let currentStoryTheme = null;
 
@@ -1331,6 +1369,7 @@ function renderChat(){
         <button onclick="sendChat()" style="padding:14px 18px;border-radius:14px;border:none;background:linear-gradient(90deg,#7c3aed,#ec4899);color:#fff;font-size:20px;cursor:pointer">➤</button>
       </div>
       <div style="display:flex;gap:8px;flex-wrap:wrap">${quickBtns}</div>
+      ${chatHistory.length>=3?`<button onclick="analyzeChatFeedback()" style="margin-top:10px;width:100%;padding:12px;border-radius:14px;border:1px solid rgba(74,222,128,.4);background:rgba(74,222,128,.08);color:#4ade80;font-size:14px;cursor:pointer;font-weight:600">📝 Analitza la conversa</button>`:''}
     </div>
   </div>`;
 }
@@ -1507,6 +1546,7 @@ function renderThemedChat(theme, systemPrompt){
         <button onclick="sendThemedChat('${theme.id}',themedSystemPrompt)" style="padding:14px 18px;border-radius:14px;border:none;background:linear-gradient(90deg,#7c3aed,#ec4899);color:#fff;font-size:20px;cursor:pointer">➤</button>
       </div>
       <div style="display:flex;gap:8px;flex-wrap:wrap">${quickBtns}</div>
+      ${chatHistory.length>=3?`<button onclick="analyzeChatFeedback()" style="margin-top:10px;width:100%;padding:12px;border-radius:14px;border:1px solid rgba(74,222,128,.4);background:rgba(74,222,128,.08);color:#4ade80;font-size:14px;cursor:pointer;font-weight:600">📝 Analitza la conversa</button>`:''}
     </div>
   </div>`;
 
@@ -1778,6 +1818,787 @@ function renderSynList(){
     </div>
   </div>`;
 }
+
+// ══════════════════════════════════════════════════════════════════════════
+// FEEDBACK POST-CONVERSA
+// ══════════════════════════════════════════════════════════════════════════
+async function analyzeChatFeedback(){
+  if(chatHistory.length<2)return;
+  logSession('chat');
+  showScreen("ai-activity");
+  document.getElementById("screen-ai-activity").innerHTML=`
+  <div style="min-height:100vh;background:linear-gradient(135deg,#0f0c29,#302b63,#24243e);display:flex;flex-direction:column;align-items:center;justify-content:center">
+    <div style="font-size:48px;animation:pulse 1s infinite">📝</div>
+    <p style="color:#4ade80;font-size:18px;margin-top:16px">Analitzant la conversa...</p>
+  </div>`;
+  const convText=chatHistory.map(m=>`${m.role==='user'?'Estudiant':'Professor'}: ${m.text}`).join('\n');
+  try{
+    const analysis=await callAI(
+      `Ets un professor d'àrab MSA que analitza converses d'un estudiant A2-B1. ${VOCAB_SHORT}
+Analitza la conversa i respon en aquest format EXACTE:
+
+📊 RESUM
+- Nivell general de la conversa (A1, A2, B1...)
+- Punts forts (2-3 coses que fa bé)
+
+❌ ERRORS GRAMATICALS
+Llista cada error amb:
+- El que ha escrit → El que hauria d'escriure
+- Explicació breu en català
+
+📝 VOCABULARI
+- Paraules noves que podria aprendre relacionades amb el tema
+- 3-4 paraules en àrab amb traducció
+
+💡 CONSELLS
+- 2-3 suggeriments concrets per millorar
+
+Respon en català. L'àrab sempre amb tashkil complet.`,
+      `Analitza aquesta conversa:\n\n${convText}`
+    );
+    document.getElementById("screen-ai-activity").innerHTML=`
+    <div style="min-height:100vh;background:linear-gradient(135deg,#0f0c29,#302b63,#24243e);padding:24px 16px">
+      <div style="max-width:580px;margin:0 auto">
+        <div style="display:flex;align-items:center;gap:14px;margin-bottom:20px">
+          <button onclick="showScreen('ai');renderAIMenu()" style="background:none;border:none;color:#888;font-size:28px;cursor:pointer">←</button>
+          <h2 style="font-size:20px;color:#4ade80">📝 Anàlisi de la conversa</h2>
+        </div>
+        <div style="background:rgba(255,255,255,.05);border:1px solid rgba(74,222,128,.2);border-radius:20px;padding:24px 20px;white-space:pre-wrap;color:#ccc;font-size:15px;line-height:1.8">${analysis.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>
+        <button onclick="showScreen('ai');renderAIMenu()" style="margin-top:16px;width:100%;padding:14px;border-radius:16px;border:none;background:linear-gradient(90deg,#10b981,#06b6d4);color:#0f0c29;font-weight:700;font-size:16px;cursor:pointer">← Tornar</button>
+      </div>
+    </div>`;
+  }catch(e){
+    document.getElementById("screen-ai-activity").innerHTML=`
+    <div style="min-height:100vh;background:linear-gradient(135deg,#0f0c29,#302b63,#24243e);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px">
+      <div style="color:#f87171;font-size:18px;margin-bottom:16px">Error: ${e.message}</div>
+      <button onclick="showScreen('ai');renderAIMenu()" style="padding:14px 28px;border-radius:14px;border:none;background:#7c3aed;color:#fff;cursor:pointer">← Tornar</button>
+    </div>`;
+  }
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+// ROLEPLAY AMB OBJECTIUS
+// ══════════════════════════════════════════════════════════════════════════
+const ROLEPLAY_MISSIONS = [
+  {id:"doctor_appointment", emoji:"🏥", label:"Demana cita al metge", objective:"Aconseguir una cita amb el metge explicant els teus símptomes.", hint:"Has de dir què et fa mal i demanar un dia i hora.", vocab:"salut, cos humà"},
+  {id:"market_haggle", emoji:"🛒", label:"Regateig al mercat", objective:"Compra 3 productes i aconsegueix un descompte.", hint:"Pregunta preus, digues que és car, demana rebaixa.", vocab:"compres, menjar, números"},
+  {id:"hotel_checkin", emoji:"🏨", label:"Registre a l'hotel", objective:"Registra't a l'hotel i demana una habitació amb vista.", hint:"Dona el teu nom, diu quants dies, pregunta pel preu.", vocab:"viatge, habitatge"},
+  {id:"lost_luggage", emoji:"🧳", label:"Maleta perduda", objective:"Explica que has perdut la maleta i descriu-la.", hint:"Digues el color, la mida i què hi havia dins.", vocab:"viatge, roba, colors"},
+  {id:"restaurant_order", emoji:"🍽️", label:"Comanda al restaurant", objective:"Demana un àpat complet (primer, segon, beguda, postres).", hint:"Pregunta què recomanen, demana el compte al final.", vocab:"menjar, begudes, expressions"},
+  {id:"directions", emoji:"🗺️", label:"Demana direccions", objective:"Arriba a la mesquita preguntant a un vianant.", hint:"Pregunta on és, com arribar-hi, si està lluny.", vocab:"direccions, transport"},
+  {id:"job_interview", emoji:"💼", label:"Entrevista de feina", objective:"Presenta't i explica la teva experiència i habilitats.", hint:"Digues el teu nom, la teva feina, els idiomes que parles.", vocab:"treball, professions, estudis"},
+  {id:"rent_apartment", emoji:"🏠", label:"Lloguer d'un pis", objective:"Pregunta sobre un pis de lloguer i negocia el preu.", hint:"Pregunta quantes habitacions, quin pis, si té mobles.", vocab:"casa, habitatge, números"},
+];
+
+let roleplayState = null;
+
+function renderRoleplayMenu(){
+  showScreen("ai-activity");
+  const cards = ROLEPLAY_MISSIONS.map(m => `
+    <button onclick="startRoleplay('${m.id}')" style="padding:14px 16px;border-radius:16px;border:1px solid rgba(245,158,11,.25);background:rgba(245,158,11,.06);text-align:left;cursor:pointer;width:100%;transition:background .2s"
+      onmouseover="this.style.background='rgba(245,158,11,.14)'" onmouseout="this.style.background='rgba(245,158,11,.06)'">
+      <div style="display:flex;align-items:center;gap:10px">
+        <span style="font-size:22px">${m.emoji}</span>
+        <span style="color:#fbbf24;font-weight:700;font-size:15px">${m.label}</span>
+      </div>
+      <div style="color:#666;font-size:12px;line-height:1.4;padding-left:32px;margin-top:2px">🎯 ${m.objective}</div>
+      <div style="color:#555;font-size:11px;padding-left:32px;margin-top:2px">💡 ${m.hint}</div>
+    </button>`).join("");
+
+  document.getElementById("screen-ai-activity").innerHTML = `
+  <div style="min-height:100vh;background:linear-gradient(135deg,#0f0c29,#302b63,#24243e);padding:24px 16px;overflow-y:auto">
+    <div style="max-width:560px;margin:0 auto">
+      <div style="display:flex;align-items:center;gap:14px;margin-bottom:20px">
+        <button onclick="showScreen('ai');renderAIMenu()" style="background:none;border:none;color:#888;font-size:28px;cursor:pointer">←</button>
+        <h2 style="font-size:20px;color:#fbbf24">🎯 Roleplay amb objectius</h2>
+      </div>
+      <p style="color:#666;font-size:13px;margin-bottom:14px">Completa la missió parlant en àrab. L'IA avaluarà si ho has aconseguit.</p>
+      <div style="display:flex;flex-direction:column;gap:10px">${cards}</div>
+    </div>
+  </div>`;
+}
+
+async function startRoleplay(missionId){
+  const mission = ROLEPLAY_MISSIONS.find(m=>m.id===missionId);
+  if(!mission)return;
+  chatHistory=[];
+  roleplayState={mission,completed:false};
+  showAILoading("roleplay");
+
+  const sysPrompt = `Ets un parlant natiu d'àrab en un roleplay. ${VOCAB_CONTEXT}
+MISSIÓ DE L'ESTUDIANT: ${mission.objective}
+SITUACIÓ: ${mission.label}
+ROL: Actua el paper adequat (venedor, metge, recepcionista...). Inicia la conversa de forma natural.
+REGLES:
+- Frases curtes i clares, nivell A2-B1
+- Si comet errors, corregeix-los breument amb 💡
+- Quan l'estudiant hagi completat l'objectiu, acaba el missatge amb: ✅ MISSIÓ COMPLETADA!
+- Si no ho aconsegueix després de 8 missatges, dona pistes
+- ÀRAB amb tashkil complet SEMPRE
+Format: línia àrab + traducció català`;
+
+  try{
+    const greeting=await callAI(sysPrompt,"Inicia el roleplay");
+    chatHistory=[{role:"assistant",text:greeting}];
+    window.roleplaySystemPrompt=sysPrompt;
+    renderRoleplayChat(mission);
+  }catch(e){
+    if(e.message==="No API key")return;
+    document.getElementById("screen-ai-activity").innerHTML=`
+    <div style="min-height:100vh;background:linear-gradient(135deg,#0f0c29,#302b63,#24243e);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px">
+      <div style="color:#f87171;font-size:18px;margin-bottom:16px">Error: ${e.message}</div>
+      <button onclick="renderRoleplayMenu()" style="padding:14px 28px;border-radius:14px;border:none;background:#7c3aed;color:#fff;cursor:pointer">← Tornar</button>
+    </div>`;
+  }
+}
+
+function renderRoleplayChat(mission){
+  showScreen("ai-activity");
+  const completed=chatHistory.some(m=>m.text.includes('MISSIÓ COMPLETADA'));
+  const msgs=chatHistory.map(m=>{
+    const isAI=m.role==="assistant";
+    if(isAI){
+      const lines=m.text.split("\n");
+      const speakBtn=lines[0]?`<button onclick='speakAr(${JSON.stringify(lines[0]).replace(/'/g,"&#39;")});this.textContent="🔊";setTimeout(()=>this.textContent="🔈",1800)' style="background:none;border:none;color:#555;font-size:16px;cursor:pointer;margin-top:4px">🔈</button>`:"";
+      return `<div style="display:flex;justify-content:flex-start;margin-bottom:10px">
+        <div style="max-width:85%;padding:14px 16px;border-radius:18px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1)">
+          <div class="ar" style="font-size:20px;color:#fff;line-height:1.7">${lines[0]||""}</div>
+          ${lines.slice(1).map(l=>`<div style="color:#aaa;font-size:13px;font-style:italic">${l}</div>`).join("")}
+          ${speakBtn}
+        </div>
+      </div>`;
+    }else{
+      return `<div style="display:flex;justify-content:flex-end;margin-bottom:10px">
+        <div style="max-width:85%;padding:14px 16px;border-radius:18px;background:rgba(245,158,11,.3);border:1px solid rgba(245,158,11,.5)">
+          <span style="color:#e2e8f0;font-size:16px">${m.text}</span>
+        </div>
+      </div>`;
+    }
+  }).join("");
+
+  const missionBar=`<div style="background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.3);border-radius:14px;padding:12px 16px;margin-bottom:14px">
+    <div style="font-size:13px;color:#fbbf24;font-weight:600">🎯 ${mission.objective}</div>
+    <div style="font-size:11px;color:#666;margin-top:2px">💡 ${mission.hint}</div>
+    ${completed?'<div style="font-size:14px;color:#4ade80;font-weight:700;margin-top:6px">✅ Missió completada!</div>':''}
+  </div>`;
+
+  const inputArea=completed?`
+    <div style="display:flex;gap:10px">
+      <button onclick="renderRoleplayMenu()" style="flex:1;padding:14px;border-radius:14px;border:none;background:linear-gradient(90deg,#f59e0b,#ec4899);color:#fff;font-weight:700;font-size:16px;cursor:pointer">🎯 Nova missió</button>
+      <button onclick="analyzeChatFeedback()" style="flex:1;padding:14px;border-radius:14px;border:1px solid rgba(74,222,128,.4);background:rgba(74,222,128,.08);color:#4ade80;font-size:14px;cursor:pointer;font-weight:600">📝 Analitza</button>
+    </div>`:`
+    <div style="display:flex;gap:8px;margin-bottom:8px">
+      <button onclick="toggleArabicKb()" id="kb-toggle" style="padding:7px 12px;border-radius:10px;border:1px solid rgba(167,139,250,.4);background:rgba(167,139,250,.1);color:#a78bfa;font-size:12px;cursor:pointer">⌨️ Teclat àrab</button>
+    </div>
+    <div id="arabic-kb" style="display:none;background:rgba(255,255,255,.05);border:1px solid #333;border-radius:14px;padding:10px;margin-bottom:10px;direction:rtl">
+      <div style="display:flex;flex-wrap:wrap;gap:5px;justify-content:center;margin-bottom:6px">
+        ${'ض ص ث ق ف غ ع ه خ ح ج د ذ ر ز س ش ط ظ ل ا ت ن م ك ي ب و ة أ إ ئ ؤ ء'.split(' ').map(c=>`<button onclick="insertChar('${c}')" style="width:36px;height:36px;border-radius:8px;border:1px solid #444;background:rgba(255,255,255,.08);color:#fff;font-family:Arial,sans-serif;font-size:18px;cursor:pointer">${c}</button>`).join('')}
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:5px;justify-content:center">
+        <button onclick="insertChar('َ')" style="width:42px;height:36px;border-radius:8px;border:1px solid rgba(249,212,35,.4);background:rgba(249,212,35,.08);color:#f9d423;font-size:16px;cursor:pointer">ـَ</button>
+        <button onclick="insertChar('ِ')" style="width:42px;height:36px;border-radius:8px;border:1px solid rgba(249,212,35,.4);background:rgba(249,212,35,.08);color:#f9d423;font-size:16px;cursor:pointer">ـِ</button>
+        <button onclick="insertChar('ُ')" style="width:42px;height:36px;border-radius:8px;border:1px solid rgba(249,212,35,.4);background:rgba(249,212,35,.08);color:#f9d423;font-size:16px;cursor:pointer">ـُ</button>
+        <button onclick="insertChar('ّ')" style="width:42px;height:36px;border-radius:8px;border:1px solid rgba(249,212,35,.4);background:rgba(249,212,35,.08);color:#f9d423;font-size:16px;cursor:pointer">ـّ</button>
+        <button onclick="insertChar('ْ')" style="width:42px;height:36px;border-radius:8px;border:1px solid rgba(249,212,35,.4);background:rgba(249,212,35,.08);color:#f9d423;font-size:16px;cursor:pointer">ـْ</button>
+        <button onclick="deleteChar()" style="width:42px;height:36px;border-radius:8px;border:1px solid #555;background:rgba(248,113,113,.1);color:#f87171;font-size:16px;cursor:pointer">⌫</button>
+        <button onclick="insertChar(' ')" style="width:60px;height:36px;border-radius:8px;border:1px solid #444;background:rgba(255,255,255,.05);color:#aaa;font-size:12px;cursor:pointer">espai</button>
+      </div>
+    </div>
+    <div style="display:flex;gap:10px;margin-bottom:10px">
+      <input type="text" id="themed-input" placeholder="Respon en àrab..." onkeydown="if(event.key==='Enter')sendRoleplayChat()" style="flex:1;padding:14px 16px;border-radius:14px;border:1px solid rgba(245,158,11,.4);background:rgba(255,255,255,.06);color:#fff;font-size:17px;font-family:Arial,sans-serif;direction:auto">
+      <button onclick="sendRoleplayChat()" style="padding:14px 18px;border-radius:14px;border:none;background:linear-gradient(90deg,#f59e0b,#ec4899);color:#fff;font-size:20px;cursor:pointer">➤</button>
+    </div>`;
+
+  document.getElementById("screen-ai-activity").innerHTML=`
+  <div style="min-height:100vh;background:linear-gradient(135deg,#0f0c29,#302b63,#24243e);padding:24px 16px;display:flex;flex-direction:column">
+    <div style="max-width:580px;margin:0 auto;width:100%;flex:1;display:flex;flex-direction:column">
+      <div style="display:flex;align-items:center;gap:14px;margin-bottom:10px">
+        <button onclick="renderRoleplayMenu()" style="background:none;border:none;color:#888;font-size:28px;cursor:pointer">←</button>
+        <div style="font-size:16px;color:#fbbf24;font-weight:600">${mission.emoji} ${mission.label}</div>
+      </div>
+      ${missionBar}
+      <div style="flex:1;overflow-y:auto;display:flex;flex-direction:column;margin-bottom:14px;max-height:45vh">${msgs}</div>
+      ${inputArea}
+    </div>
+  </div>`;
+}
+
+async function sendRoleplayChat(){
+  const inp=document.getElementById('themed-input');
+  if(!inp||!inp.value.trim())return;
+  const userText=inp.value.trim();
+  inp.value='';
+  chatHistory.push({role:"user",text:userText});
+  const mission=roleplayState.mission;
+  const histForAI=chatHistory.map(m=>({role:m.role==="assistant"?"assistant":"user",content:m.text}));
+  try{
+    const reply=await callAI(window.roleplaySystemPrompt,null,histForAI);
+    chatHistory.push({role:"assistant",text:reply});
+    if(reply.includes('MISSIÓ COMPLETADA'))logSession('roleplay');
+  }catch(e){
+    chatHistory.push({role:"assistant",text:"Error: "+e.message});
+  }
+  renderRoleplayChat(mission);
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+// CONSTRUCCIÓ DE FRASES (SENTENCE BUILDING)
+// ══════════════════════════════════════════════════════════════════════════
+const BUILD_SENTENCES = [
+  {words:["ذَهَبَ","الطَّالِبُ","إِلَى","الجَامِعَةِ"], correct:"ذَهَبَ الطَّالِبُ إِلَى الجَامِعَةِ", ca:"L'estudiant va anar a la universitat"},
+  {words:["يَدْرُسُ","أَحْمَدُ","اللُّغَةَ","العَرَبِيَّةَ"], correct:"يَدْرُسُ أَحْمَدُ اللُّغَةَ العَرَبِيَّةَ", ca:"Ahmad estudia la llengua àrab"},
+  {words:["سَافَرَ","الأُسْتَاذُ","إِلَى","مِصْرَ","بِالطَّائِرَةِ"], correct:"سَافَرَ الأُسْتَاذُ إِلَى مِصْرَ بِالطَّائِرَةِ", ca:"El professor va viatjar a Egipte en avió"},
+  {words:["تَأْكُلُ","العَائِلَةُ","الفُطُورَ","فِي","المَطْبَخِ"], correct:"تَأْكُلُ العَائِلَةُ الفُطُورَ فِي المَطْبَخِ", ca:"La família esmorza a la cuina"},
+  {words:["يَشْتَرِي","الوَلَدُ","الخُبْزَ","مِنَ","السُّوقِ"], correct:"يَشْتَرِي الوَلَدُ الخُبْزَ مِنَ السُّوقِ", ca:"El nen compra pa del mercat"},
+  {words:["ذَهَبَتْ","فَاطِمَةُ","إِلَى","المُسْتَشْفَى","أَمْسِ"], correct:"ذَهَبَتْ فَاطِمَةُ إِلَى المُسْتَشْفَى أَمْسِ", ca:"Fàtima va anar a l'hospital ahir"},
+  {words:["يَقْرَأُ","الطَّبِيبُ","التَّقْرِيرَ","الطِّبِّيَّ"], correct:"يَقْرَأُ الطَّبِيبُ التَّقْرِيرَ الطِّبِّيَّ", ca:"El metge llegeix l'informe mèdic"},
+  {words:["كَانَ","الجَوُّ","حَارًّا","جِدًّا","أَمْسِ"], correct:"كَانَ الجَوُّ حَارًّا جِدًّا أَمْسِ", ca:"Ahir feia molta calor"},
+  {words:["يُسَافِرُ","عُمَرُ","إِلَى","بَرْشَلُونَة","كُلَّ","سَنَةٍ"], correct:"يُسَافِرُ عُمَرُ إِلَى بَرْشَلُونَة كُلَّ سَنَةٍ", ca:"Omar viatja a Barcelona cada any"},
+  {words:["نَصَحَهُ","الطَّبِيبُ","بِالرَّاحَةِ","وَالدَّوَاءِ"], correct:"نَصَحَهُ الطَّبِيبُ بِالرَّاحَةِ وَالدَّوَاءِ", ca:"El metge li va recomanar descans i medicaments"},
+  {words:["لَا","يُحِبُّ","خَالِدٌ","السَّفَرَ","بِالبَحْرِ"], correct:"لَا يُحِبُّ خَالِدٌ السَّفَرَ بِالبَحْرِ", ca:"A Khalid no li agrada viatjar per mar"},
+  {words:["اسْتَيْقَظَ","مُبَكِّرًا","وَذَهَبَ","إِلَى","المَسْجِدِ"], correct:"اسْتَيْقَظَ مُبَكِّرًا وَذَهَبَ إِلَى المَسْجِدِ", ca:"Es va despertar d'hora i va anar a la mesquita"},
+];
+
+let buildState = null;
+
+function renderBuildMenu(){
+  buildState = {deck:shuffle([...BUILD_SENTENCES]).slice(0,8), idx:0, score:0, selected:[], answered:false};
+  renderBuildCard();
+}
+
+function renderBuildCard(){
+  const el=document.getElementById("screen-build");
+  const bs=buildState;
+  if(!bs||bs.idx>=bs.deck.length){renderBuildDone();return;}
+  const card=bs.deck[bs.idx];
+  const pct=(bs.idx/bs.deck.length)*100;
+  const available=shuffle([...card.words]).filter(w=>!bs.selected.includes(bs.selected.indexOf(w)>=0?'__used__':''));
+
+  // Track which words are used by index
+  const wordPool=[...card.words];
+  const shuffledPool=shuffle(wordPool.map((w,i)=>({w,i})));
+  const usedIndices=bs.selected.map(s=>s.idx);
+  const remaining=shuffledPool.filter(s=>!usedIndices.includes(s.idx));
+
+  const selectedHtml=bs.selected.map((s,i)=>`
+    <button onclick="${bs.answered?'':`removeBuildWord(${i})`}" style="padding:8px 14px;border-radius:10px;border:1px solid rgba(245,158,11,.5);background:rgba(245,158,11,.15);color:#fbbf24;font-family:Arial,sans-serif;font-size:22px;cursor:${bs.answered?'default':'pointer'};direction:rtl">${s.word}</button>`).join("");
+
+  const poolHtml=remaining.map(s=>`
+    <button onclick="addBuildWord(${s.i},'${s.w.replace(/'/g,"\\'")}')" style="padding:10px 16px;border-radius:12px;border:1px solid #444;background:rgba(255,255,255,.06);color:#ccc;font-family:Arial,sans-serif;font-size:22px;cursor:pointer;direction:rtl">${s.w}</button>`).join("");
+
+  let feedbackHtml='';
+  if(bs.answered){
+    const userSentence=bs.selected.map(s=>s.word).join(' ');
+    const isCorrect=userSentence===card.correct;
+    feedbackHtml=`<div style="margin-top:14px;padding:14px;border-radius:14px;background:${isCorrect?'rgba(74,222,128,.1)':'rgba(248,113,113,.1)'};border:1px solid ${isCorrect?'rgba(74,222,128,.3)':'rgba(248,113,113,.3)'}">
+      <div style="color:${isCorrect?'#4ade80':'#f87171'};font-size:16px;font-weight:700;margin-bottom:6px">${isCorrect?'✓ Correcte!':'✗ Incorrecte'}</div>
+      ${!isCorrect?`<div class="ar" style="font-size:22px;color:#4ade80;direction:rtl;margin-bottom:4px">${card.correct}</div>`:''}
+      <div style="color:#aaa;font-size:14px;font-style:italic">${card.ca}</div>
+    </div>
+    <button onclick="nextBuildCard()" style="margin-top:14px;width:100%;padding:16px;border-radius:16px;border:none;background:linear-gradient(90deg,#f59e0b,#ec4899);color:#fff;font-weight:700;font-size:18px;cursor:pointer">${bs.idx+1>=bs.deck.length?'Veure resultats':'Següent →'}</button>`;
+  }
+
+  el.innerHTML=`
+  <div style="min-height:100vh;background:linear-gradient(135deg,#0f0c29,#302b63,#24243e);padding:24px 16px">
+    <div style="max-width:520px;margin:0 auto">
+      <div style="display:flex;align-items:center;gap:14px;margin-bottom:16px">
+        <button onclick="showScreen('menu');renderMenu()" style="background:none;border:none;color:#888;font-size:28px;cursor:pointer">←</button>
+        <div class="grad-bar" style="flex:1"><div style="height:100%;background:linear-gradient(90deg,#f59e0b,#ec4899);border-radius:4px;width:${pct}%"></div></div>
+        <span style="color:#888;font-size:17px">${bs.idx+1}/${bs.deck.length}</span>
+      </div>
+      <div class="card" style="border-color:rgba(245,158,11,.2)">
+        <div style="text-align:center;margin-bottom:16px">
+          <div style="font-size:12px;letter-spacing:2px;color:#f59e0b;text-transform:uppercase;margin-bottom:8px">🧩 Ordena les paraules</div>
+          <div style="font-size:15px;color:#888;font-style:italic;margin-bottom:14px">${card.ca}</div>
+        </div>
+        <div style="min-height:50px;background:rgba(245,158,11,.06);border:2px dashed rgba(245,158,11,.3);border-radius:14px;padding:12px;display:flex;gap:8px;flex-wrap:wrap;justify-content:center;direction:rtl;margin-bottom:16px">
+          ${selectedHtml||'<span style="color:#555;font-size:14px">Clica les paraules per construir la frase</span>'}
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center;direction:rtl">${poolHtml}</div>
+        ${!bs.answered&&bs.selected.length===card.words.length?`<button onclick="checkBuildAnswer()" style="margin-top:14px;width:100%;padding:16px;border-radius:16px;border:none;background:linear-gradient(90deg,#f59e0b,#ec4899);color:#fff;font-weight:700;font-size:18px;cursor:pointer">Comprovar</button>`:''}
+        ${feedbackHtml}
+      </div>
+      <div style="text-align:center;margin-top:12px;color:#555;font-size:14px">Puntuació: ${bs.score}/${bs.idx}</div>
+    </div>
+  </div>`;
+}
+
+function addBuildWord(idx,word){
+  if(buildState.answered)return;
+  buildState.selected.push({idx,word});
+  renderBuildCard();
+}
+function removeBuildWord(i){
+  if(buildState.answered)return;
+  buildState.selected.splice(i,1);
+  renderBuildCard();
+}
+function checkBuildAnswer(){
+  const bs=buildState;
+  const card=bs.deck[bs.idx];
+  const userSentence=bs.selected.map(s=>s.word).join(' ');
+  bs.answered=true;
+  if(userSentence===card.correct)bs.score++;
+  renderBuildCard();
+}
+function nextBuildCard(){
+  buildState.idx++;
+  buildState.selected=[];
+  buildState.answered=false;
+  renderBuildCard();
+}
+function renderBuildDone(){
+  logSession('build');
+  const bs=buildState;
+  const pct=Math.round((bs.score/bs.deck.length)*100);
+  const emoji=pct>=80?'🏆':pct>=60?'👍':pct>=40?'💪':'📚';
+  document.getElementById("screen-build").innerHTML=`
+  <div style="min-height:100vh;background:linear-gradient(135deg,#0f0c29,#302b63,#24243e);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px">
+    <div style="font-size:72px">${emoji}</div>
+    <h2 style="font-size:32px;margin:16px 0 8px;background:linear-gradient(90deg,#f59e0b,#ec4899);-webkit-background-clip:text;-webkit-text-fill-color:transparent">${bs.score} / ${bs.deck.length}</h2>
+    <p style="color:#aaa;font-size:18px">${pct}% correctes</p>
+    <div style="display:flex;gap:12px;margin-top:28px">
+      <button onclick="renderBuildMenu()" style="padding:16px 28px;border-radius:16px;border:none;background:linear-gradient(90deg,#f59e0b,#ec4899);color:#fff;font-weight:700;font-size:16px;cursor:pointer">🔄 Repetir</button>
+      <button onclick="showScreen('menu');renderMenu()" style="padding:16px 28px;border-radius:16px;border:2px solid #444;background:transparent;color:#888;font-size:16px;cursor:pointer">← Menú</button>
+    </div>
+  </div>`;
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+// MODE DICTAT
+// ══════════════════════════════════════════════════════════════════════════
+const DICTATION_SENTENCES = [
+  {ar:"ذَهَبَ الطَّالِبُ إِلَى المَدْرَسَةِ", ca:"L'estudiant va anar a l'escola", plain:"ذهب الطالب الى المدرسة"},
+  {ar:"أُرِيدُ كَأْسَ مَاءٍ مِنْ فَضْلِكَ", ca:"Vull un got d'aigua si us plau", plain:"اريد كأس ماء من فضلك"},
+  {ar:"هَلْ تُحِبُّ القَهْوَةَ أَمِ الشَّايَ؟", ca:"Prefereixes cafè o te?", plain:"هل تحب القهوة ام الشاي"},
+  {ar:"سَافَرَ أَبِي إِلَى مِصْرَ", ca:"El meu pare va viatjar a Egipte", plain:"سافر ابي الى مصر"},
+  {ar:"الجَوُّ بَارِدٌ اليَوْمَ", ca:"Avui fa fred", plain:"الجو بارد اليوم"},
+  {ar:"يَعْمَلُ فِي شَرِكَةٍ كَبِيرَةٍ", ca:"Treballa en una empresa gran", plain:"يعمل في شركة كبيرة"},
+  {ar:"أَنَا طَالِبٌ مِنْ بَرْشَلُونَة", ca:"Sóc un estudiant de Barcelona", plain:"انا طالب من برشلونة"},
+  {ar:"كَتَبَ الرِّسَالَةَ وَأَرْسَلَهَا", ca:"Va escriure la carta i la va enviar", plain:"كتب الرسالة وارسلها"},
+  {ar:"نَامَ الطِّفْلُ بَعْدَ العَشَاءِ", ca:"El nen va dormir després del sopar", plain:"نام الطفل بعد العشاء"},
+  {ar:"اشْتَرَيْتُ خُبْزًا وَجُبْنًا", ca:"He comprat pa i formatge", plain:"اشتريت خبزا وجبنا"},
+];
+
+let dictState = null;
+
+function startDictation(){
+  dictState={deck:shuffle([...DICTATION_SENTENCES]).slice(0,6), idx:0, score:0, userInput:'', checked:false, showHint:false};
+  renderDictation();
+}
+
+function renderDictation(){
+  const el=document.getElementById("screen-dictation");
+  const ds=dictState;
+  if(!ds||ds.idx>=ds.deck.length){renderDictDone();return;}
+  const card=ds.deck[ds.idx];
+  const pct=(ds.idx/ds.deck.length)*100;
+
+  let feedbackHtml='';
+  if(ds.checked){
+    // Compare ignoring tashkil
+    const strip=s=>s.replace(/[ً-ٰٟ]/g,'').replace(/\s+/g,' ').trim();
+    const userStrip=strip(ds.userInput);
+    const correctStrip=strip(card.ar);
+    const isCorrect=userStrip===correctStrip||strip(ds.userInput)===strip(card.plain);
+    feedbackHtml=`<div style="margin-top:14px;padding:14px;border-radius:14px;background:${isCorrect?'rgba(74,222,128,.1)':'rgba(248,113,113,.1)'};border:1px solid ${isCorrect?'rgba(74,222,128,.3)':'rgba(248,113,113,.3)'}">
+      <div style="color:${isCorrect?'#4ade80':'#f87171'};font-size:16px;font-weight:700;margin-bottom:6px">${isCorrect?'✓ Correcte!':'✗ Gairebé!'}</div>
+      <div class="ar" style="font-size:24px;color:#4ade80;direction:rtl;margin-bottom:4px">${card.ar}</div>
+      <div style="color:#aaa;font-size:14px;font-style:italic">${card.ca}</div>
+    </div>
+    <button onclick="nextDictCard()" style="margin-top:14px;width:100%;padding:16px;border-radius:16px;border:none;background:linear-gradient(90deg,#ec4899,#a78bfa);color:#fff;font-weight:700;font-size:18px;cursor:pointer">${ds.idx+1>=ds.deck.length?'Resultats':'Següent →'}</button>`;
+  }
+
+  el.innerHTML=`
+  <div style="min-height:100vh;background:linear-gradient(135deg,#0f0c29,#302b63,#24243e);padding:24px 16px">
+    <div style="max-width:520px;margin:0 auto">
+      <div style="display:flex;align-items:center;gap:14px;margin-bottom:16px">
+        <button onclick="showScreen('menu');renderMenu()" style="background:none;border:none;color:#888;font-size:28px;cursor:pointer">←</button>
+        <div class="grad-bar" style="flex:1"><div style="height:100%;background:linear-gradient(90deg,#ec4899,#a78bfa);border-radius:4px;width:${pct}%"></div></div>
+        <span style="color:#888;font-size:17px">${ds.idx+1}/${ds.deck.length}</span>
+      </div>
+      <div class="card" style="border-color:rgba(236,72,153,.2)">
+        <div style="text-align:center;margin-bottom:16px">
+          <div style="font-size:12px;letter-spacing:2px;color:#ec4899;text-transform:uppercase;margin-bottom:8px">🎧 Dictat</div>
+          <p style="color:#888;font-size:14px;margin-bottom:14px">Escolta la frase i escriu-la en àrab</p>
+          <button onclick="speakAr('${card.ar.replace(/'/g,"\\'")}');this.textContent='🔊';setTimeout(()=>this.textContent='🔈 Escoltar',1800)" style="padding:14px 28px;border-radius:14px;border:2px solid #ec4899;background:rgba(236,72,153,.1);color:#f472b6;font-size:18px;cursor:pointer">🔈 Escoltar</button>
+          ${ds.showHint?`<div style="margin-top:10px;font-size:14px;color:#888;font-style:italic">💡 ${card.ca}</div>`:`<button onclick="dictState.showHint=true;renderDictation()" style="margin-top:8px;background:none;border:none;color:#555;font-size:12px;cursor:pointer;text-decoration:underline">Veure pista (traducció)</button>`}
+        </div>
+        <div id="arabic-kb" style="background:rgba(255,255,255,.05);border:1px solid #333;border-radius:14px;padding:10px;margin-bottom:10px;direction:rtl">
+          <div style="display:flex;flex-wrap:wrap;gap:5px;justify-content:center;margin-bottom:6px">
+            ${'ض ص ث ق ف غ ع ه خ ح ج د ذ ر ز س ش ط ظ ل ا ت ن م ك ي ب و ة أ إ ئ ؤ ء'.split(' ').map(c=>`<button onclick="insertDictChar('${c}')" style="width:34px;height:34px;border-radius:8px;border:1px solid #444;background:rgba(255,255,255,.08);color:#fff;font-family:Arial,sans-serif;font-size:17px;cursor:pointer">${c}</button>`).join('')}
+          </div>
+          <div style="display:flex;flex-wrap:wrap;gap:5px;justify-content:center">
+            <button onclick="insertDictChar('َ')" style="width:40px;height:34px;border-radius:8px;border:1px solid rgba(249,212,35,.4);background:rgba(249,212,35,.08);color:#f9d423;font-size:15px;cursor:pointer">ـَ</button>
+            <button onclick="insertDictChar('ِ')" style="width:40px;height:34px;border-radius:8px;border:1px solid rgba(249,212,35,.4);background:rgba(249,212,35,.08);color:#f9d423;font-size:15px;cursor:pointer">ـِ</button>
+            <button onclick="insertDictChar('ُ')" style="width:40px;height:34px;border-radius:8px;border:1px solid rgba(249,212,35,.4);background:rgba(249,212,35,.08);color:#f9d423;font-size:15px;cursor:pointer">ـُ</button>
+            <button onclick="insertDictChar('ّ')" style="width:40px;height:34px;border-radius:8px;border:1px solid rgba(249,212,35,.4);background:rgba(249,212,35,.08);color:#f9d423;font-size:15px;cursor:pointer">ـّ</button>
+            <button onclick="insertDictChar('ْ')" style="width:40px;height:34px;border-radius:8px;border:1px solid rgba(249,212,35,.4);background:rgba(249,212,35,.08);color:#f9d423;font-size:15px;cursor:pointer">ـْ</button>
+            <button onclick="deleteDictChar()" style="width:40px;height:34px;border-radius:8px;border:1px solid #555;background:rgba(248,113,113,.1);color:#f87171;font-size:15px;cursor:pointer">⌫</button>
+            <button onclick="insertDictChar(' ')" style="width:56px;height:34px;border-radius:8px;border:1px solid #444;background:rgba(255,255,255,.05);color:#aaa;font-size:11px;cursor:pointer">espai</button>
+          </div>
+        </div>
+        <input type="text" id="dict-input" value="${ds.userInput}" oninput="dictState.userInput=this.value" placeholder="Escriu aquí..." style="width:100%;padding:14px 16px;border-radius:14px;border:1px solid rgba(236,72,153,.4);background:rgba(255,255,255,.06);color:#fff;font-size:22px;font-family:Arial,sans-serif;direction:rtl;text-align:right;margin-bottom:10px">
+        ${!ds.checked?`<button onclick="checkDictAnswer()" style="width:100%;padding:16px;border-radius:16px;border:none;background:linear-gradient(90deg,#ec4899,#a78bfa);color:#fff;font-weight:700;font-size:18px;cursor:pointer">Comprovar</button>`:''}
+        ${feedbackHtml}
+      </div>
+    </div>
+  </div>`;
+}
+
+function insertDictChar(ch){
+  const inp=document.getElementById('dict-input');
+  if(!inp)return;
+  const s=inp.selectionStart,e=inp.selectionEnd;
+  inp.value=inp.value.slice(0,s)+ch+inp.value.slice(e);
+  inp.selectionStart=inp.selectionEnd=s+ch.length;
+  inp.focus();
+  dictState.userInput=inp.value;
+}
+function deleteDictChar(){
+  const inp=document.getElementById('dict-input');
+  if(!inp||inp.selectionStart===0)return;
+  const s=inp.selectionStart;
+  inp.value=inp.value.slice(0,s-1)+inp.value.slice(s);
+  inp.selectionStart=inp.selectionEnd=s-1;
+  inp.focus();
+  dictState.userInput=inp.value;
+}
+function checkDictAnswer(){
+  const ds=dictState;
+  const card=ds.deck[ds.idx];
+  ds.checked=true;
+  const strip=s=>s.replace(/[ً-ٰٟ]/g,'').replace(/\s+/g,' ').trim();
+  if(strip(ds.userInput)===strip(card.ar)||strip(ds.userInput)===strip(card.plain))ds.score++;
+  renderDictation();
+}
+function nextDictCard(){
+  dictState.idx++;
+  dictState.userInput='';
+  dictState.checked=false;
+  dictState.showHint=false;
+  renderDictation();
+}
+function renderDictDone(){
+  logSession('dictation');
+  const ds=dictState;
+  const pct=Math.round((ds.score/ds.deck.length)*100);
+  const emoji=pct>=80?'🏆':pct>=60?'👍':pct>=40?'💪':'📚';
+  document.getElementById("screen-dictation").innerHTML=`
+  <div style="min-height:100vh;background:linear-gradient(135deg,#0f0c29,#302b63,#24243e);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px">
+    <div style="font-size:72px">${emoji}</div>
+    <h2 style="font-size:32px;margin:16px 0 8px;background:linear-gradient(90deg,#ec4899,#a78bfa);-webkit-background-clip:text;-webkit-text-fill-color:transparent">${ds.score} / ${ds.deck.length}</h2>
+    <p style="color:#aaa;font-size:18px">${pct}% correctes</p>
+    <div style="display:flex;gap:12px;margin-top:28px">
+      <button onclick="startDictation()" style="padding:16px 28px;border-radius:16px;border:none;background:linear-gradient(90deg,#ec4899,#a78bfa);color:#fff;font-weight:700;font-size:16px;cursor:pointer">🔄 Repetir</button>
+      <button onclick="showScreen('menu');renderMenu()" style="padding:16px 28px;border-radius:16px;border:2px solid #444;background:transparent;color:#888;font-size:16px;cursor:pointer">← Menú</button>
+    </div>
+  </div>`;
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+// DESCRIPCIÓ D'ESCENA
+// ══════════════════════════════════════════════════════════════════════════
+let sceneState = null;
+
+async function startSceneMode(){
+  showAILoading("escena");
+  try{
+    const txt=await callAI(
+      `Ets un professor d'àrab creatiu. ${VOCAB_SHORT}
+Genera una escena visual detallada per a que l'estudiant la descrigui en àrab.
+Respon NOMÉS en JSON:
+{"scene":"descripció de l'escena en català (3-4 frases, detallada, amb colors, persones, accions)","hints":["pista1 en àrab amb trad","pista2","pista3"],"sample":"descripció model en àrab (3 frases)","sample_ca":"traducció de la descripció model"}
+Temes possibles: mercat, platja, escola, cuina, hospital, aeroport, festa, jardí, restaurant, mesquita.
+ÀRAB amb tashkil complet.`,
+      "Genera una escena per descriure."
+    );
+    sceneState=JSON.parse(txt.replace(/```json|```/g,"").trim());
+    sceneState.userInput='';
+    sceneState.evaluated=false;
+    sceneState.feedback=null;
+    sceneState.showSample=false;
+    renderScene();
+  }catch(e){
+    if(e.message==="No API key")return;
+    document.getElementById("screen-ai-activity").innerHTML=`
+    <div style="min-height:100vh;background:linear-gradient(135deg,#0f0c29,#302b63,#24243e);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px">
+      <div style="color:#f87171;font-size:18px;margin-bottom:16px">Error: ${e.message}</div>
+      <button onclick="showScreen('ai');renderAIMenu()" style="padding:14px 28px;border-radius:14px;border:none;background:#7c3aed;color:#fff;cursor:pointer">← Tornar</button>
+    </div>`;
+  }
+}
+
+function renderScene(){
+  const ss=sceneState;
+  const hintsHtml=ss.hints?ss.hints.map(h=>`<div style="font-size:14px;color:#888;margin:4px 0">💡 ${h}</div>`).join(''):'';
+  const evalHtml=ss.feedback?`<div style="margin-top:14px;background:rgba(74,222,128,.08);border:1px solid rgba(74,222,128,.25);border-radius:14px;padding:16px;white-space:pre-wrap;color:#ccc;font-size:14px;line-height:1.7">${ss.feedback.replace(/</g,'&lt;')}</div>`:'';
+  const sampleHtml=ss.showSample?`<div style="margin-top:14px;background:rgba(124,58,237,.08);border:1px solid rgba(124,58,237,.25);border-radius:14px;padding:16px">
+    <div style="font-size:11px;color:#a78bfa;letter-spacing:2px;text-transform:uppercase;margin-bottom:8px">Resposta model</div>
+    <div class="ar" style="font-size:22px;color:#fff;direction:rtl;line-height:1.8;margin-bottom:8px">${ss.sample}</div>
+    <div style="color:#aaa;font-size:14px;font-style:italic">${ss.sample_ca}</div>
+  </div>`:'';
+
+  document.getElementById("screen-ai-activity").innerHTML=`
+  <div style="min-height:100vh;background:linear-gradient(135deg,#0f0c29,#302b63,#24243e);padding:24px 16px">
+    <div style="max-width:580px;margin:0 auto">
+      <div style="display:flex;align-items:center;gap:14px;margin-bottom:20px">
+        <button onclick="showScreen('ai');renderAIMenu()" style="background:none;border:none;color:#888;font-size:28px;cursor:pointer">←</button>
+        <h2 style="font-size:20px;color:#a78bfa">🖼️ Descripció d'escena</h2>
+        <button onclick="startAIActivity('scene')" style="margin-left:auto;padding:8px 14px;border-radius:12px;border:1px solid rgba(167,139,250,.4);background:rgba(167,139,250,.1);color:#a78bfa;font-size:13px;cursor:pointer">🔄 Nova</button>
+      </div>
+      <div style="background:rgba(255,255,255,.06);border:1px solid rgba(167,139,250,.2);border-radius:16px;padding:18px 20px;margin-bottom:14px">
+        <div style="font-size:11px;color:#a78bfa;letter-spacing:2px;text-transform:uppercase;margin-bottom:8px">🖼️ Escena a descriure</div>
+        <div style="color:#e2e8f0;font-size:16px;line-height:1.7">${ss.scene}</div>
+        ${hintsHtml}
+      </div>
+      <div id="arabic-kb" style="background:rgba(255,255,255,.05);border:1px solid #333;border-radius:14px;padding:10px;margin-bottom:10px;direction:rtl">
+        <div style="display:flex;flex-wrap:wrap;gap:4px;justify-content:center;margin-bottom:6px">
+          ${'ض ص ث ق ف غ ع ه خ ح ج د ذ ر ز س ش ط ظ ل ا ت ن م ك ي ب و ة أ إ ئ ؤ ء'.split(' ').map(c=>`<button onclick="insertSceneChar('${c}')" style="width:34px;height:34px;border-radius:8px;border:1px solid #444;background:rgba(255,255,255,.08);color:#fff;font-family:Arial,sans-serif;font-size:17px;cursor:pointer">${c}</button>`).join('')}
+        </div>
+        <div style="display:flex;flex-wrap:wrap;gap:4px;justify-content:center">
+          <button onclick="insertSceneChar('َ')" style="width:40px;height:34px;border-radius:8px;border:1px solid rgba(249,212,35,.4);background:rgba(249,212,35,.08);color:#f9d423;font-size:15px;cursor:pointer">ـَ</button>
+          <button onclick="insertSceneChar('ِ')" style="width:40px;height:34px;border-radius:8px;border:1px solid rgba(249,212,35,.4);background:rgba(249,212,35,.08);color:#f9d423;font-size:15px;cursor:pointer">ـِ</button>
+          <button onclick="insertSceneChar('ُ')" style="width:40px;height:34px;border-radius:8px;border:1px solid rgba(249,212,35,.4);background:rgba(249,212,35,.08);color:#f9d423;font-size:15px;cursor:pointer">ـُ</button>
+          <button onclick="insertSceneChar('ّ')" style="width:40px;height:34px;border-radius:8px;border:1px solid rgba(249,212,35,.4);background:rgba(249,212,35,.08);color:#f9d423;font-size:15px;cursor:pointer">ـّ</button>
+          <button onclick="insertSceneChar('ْ')" style="width:40px;height:34px;border-radius:8px;border:1px solid rgba(249,212,35,.4);background:rgba(249,212,35,.08);color:#f9d423;font-size:15px;cursor:pointer">ـْ</button>
+          <button onclick="deleteSceneChar()" style="width:40px;height:34px;border-radius:8px;border:1px solid #555;background:rgba(248,113,113,.1);color:#f87171;font-size:15px;cursor:pointer">⌫</button>
+          <button onclick="insertSceneChar(' ')" style="width:56px;height:34px;border-radius:8px;border:1px solid #444;background:rgba(255,255,255,.05);color:#aaa;font-size:11px;cursor:pointer">espai</button>
+        </div>
+      </div>
+      <textarea id="scene-input" oninput="sceneState.userInput=this.value" placeholder="Descriu l'escena en àrab..." style="width:100%;height:120px;padding:14px 16px;border-radius:14px;border:1px solid rgba(167,139,250,.4);background:rgba(255,255,255,.06);color:#fff;font-size:20px;font-family:Arial,sans-serif;direction:rtl;resize:none;margin-bottom:10px">${ss.userInput}</textarea>
+      ${!ss.evaluated?`<button onclick="evaluateScene()" style="width:100%;padding:16px;border-radius:16px;border:none;background:linear-gradient(90deg,#7c3aed,#ec4899);color:#fff;font-weight:700;font-size:18px;cursor:pointer">📝 Avalua la meva descripció</button>`:''}
+      ${evalHtml}
+      ${!ss.showSample?`<button onclick="sceneState.showSample=true;renderScene()" style="margin-top:10px;width:100%;padding:12px;border-radius:14px;border:1px solid rgba(167,139,250,.3);background:rgba(167,139,250,.06);color:#a78bfa;font-size:14px;cursor:pointer">👁️ Veure resposta model</button>`:sampleHtml}
+    </div>
+  </div>`;
+}
+
+function insertSceneChar(ch){
+  const inp=document.getElementById('scene-input');
+  if(!inp)return;
+  const s=inp.selectionStart,e=inp.selectionEnd;
+  inp.value=inp.value.slice(0,s)+ch+inp.value.slice(e);
+  inp.selectionStart=inp.selectionEnd=s+ch.length;
+  inp.focus();
+  sceneState.userInput=inp.value;
+}
+function deleteSceneChar(){
+  const inp=document.getElementById('scene-input');
+  if(!inp||inp.selectionStart===0)return;
+  const s=inp.selectionStart;
+  inp.value=inp.value.slice(0,s-1)+inp.value.slice(s);
+  inp.selectionStart=inp.selectionEnd=s-1;
+  inp.focus();
+  sceneState.userInput=inp.value;
+}
+
+async function evaluateScene(){
+  if(!sceneState.userInput.trim())return;
+  logSession('scene');
+  const ss=sceneState;
+  try{
+    const feedback=await callAI(
+      `Ets un professor d'àrab MSA. Avalua la descripció d'una escena feta per un estudiant A2-B1. ${VOCAB_SHORT}
+Respon en català amb:
+📊 PUNTUACIÓ: X/10
+✓ Coses ben fetes
+❌ Errors gramaticals (el que ha escrit → el correcte)
+💡 Com millorar-ho
+Escriu qualsevol àrab amb tashkil complet.`,
+      `ESCENA: ${ss.scene}\n\nDESCRIPCIÓ DE L'ESTUDIANT:\n${ss.userInput}\n\nRESPOSTA MODEL:\n${ss.sample}`
+    );
+    ss.evaluated=true;
+    ss.feedback=feedback;
+    renderScene();
+  }catch(e){
+    alert("Error: "+e.message);
+  }
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+// ESTADÍSTIQUES I PROGRÉS
+// ══════════════════════════════════════════════════════════════════════════
+function renderStats(){
+  const el=document.getElementById("screen-stats");
+  const act=loadActivity();
+  const fv=failedVerbs();
+  const totalVerbs=verbs.length;
+  const mastered=verbs.filter(v=>{const s=stats[v.en];return s&&s.fails===0&&s.streak>=3;}).length;
+  const withErrors=fv.length;
+  const untouched=totalVerbs-mastered-withErrors;
+  const totalFails=Object.values(stats).reduce((s,e)=>s+(e.fails||0),0);
+
+  // Activity last 7 days
+  const today=new Date();
+  const days7=[];
+  for(let i=6;i>=0;i--){
+    const d=new Date(today);d.setDate(d.getDate()-i);
+    const key=d.toISOString().slice(0,10);
+    const count=act.sessions?act.sessions.filter(s=>s.date===key).length:0;
+    const dayName=['Dg','Dl','Dm','Dc','Dj','Dv','Ds'][d.getDay()];
+    days7.push({day:dayName,count,date:key});
+  }
+  const maxCount=Math.max(...days7.map(d=>d.count),1);
+  const barsHtml=days7.map(d=>{
+    const h=Math.max((d.count/maxCount)*100,4);
+    const isToday=d.date===today.toISOString().slice(0,10);
+    return `<div style="display:flex;flex-direction:column;align-items:center;gap:4px;flex:1">
+      <div style="font-size:11px;color:${d.count>0?'#4ade80':'#555'}">${d.count}</div>
+      <div style="width:100%;height:80px;display:flex;align-items:flex-end;justify-content:center">
+        <div style="width:70%;height:${h}%;background:${d.count>0?'linear-gradient(180deg,#4ade80,#06b6d4)':'#333'};border-radius:6px"></div>
+      </div>
+      <div style="font-size:11px;color:${isToday?'#fff':'#666'};font-weight:${isToday?'700':'400'}">${d.day}</div>
+    </div>`;
+  }).join('');
+
+  // Verb progress bar
+  const masteredPct=Math.round((mastered/totalVerbs)*100);
+  const errorPct=Math.round((withErrors/totalVerbs)*100);
+
+  // Session types
+  const sessionTypes={};
+  (act.sessions||[]).forEach(s=>{sessionTypes[s.type]=(sessionTypes[s.type]||0)+1;});
+
+  el.innerHTML=`
+  <div style="min-height:100vh;background:linear-gradient(135deg,#0f0c29,#302b63,#24243e);padding:24px 16px">
+    <div style="max-width:520px;margin:0 auto">
+      <div style="display:flex;align-items:center;gap:14px;margin-bottom:24px">
+        <button onclick="showScreen('menu');renderMenu()" style="background:none;border:none;color:#888;font-size:28px;cursor:pointer">←</button>
+        <h2 style="font-size:24px;background:linear-gradient(90deg,#06b6d4,#4ade80);-webkit-background-clip:text;-webkit-text-fill-color:transparent">📊 Estadístiques</h2>
+      </div>
+
+      <div style="display:flex;gap:12px;margin-bottom:20px">
+        <div style="flex:1;background:rgba(255,255,255,.06);border-radius:16px;padding:16px;text-align:center">
+          <div style="font-size:36px;color:#f9d423;font-weight:700">${act.streak||0}</div>
+          <div style="font-size:12px;color:#888;margin-top:4px">🔥 Dies seguits</div>
+        </div>
+        <div style="flex:1;background:rgba(255,255,255,.06);border-radius:16px;padding:16px;text-align:center">
+          <div style="font-size:36px;color:#4ade80;font-weight:700">${(act.sessions||[]).length}</div>
+          <div style="font-size:12px;color:#888;margin-top:4px">📚 Sessions totals</div>
+        </div>
+        <div style="flex:1;background:rgba(255,255,255,.06);border-radius:16px;padding:16px;text-align:center">
+          <div style="font-size:36px;color:#a78bfa;font-weight:700">${mastered}</div>
+          <div style="font-size:12px;color:#888;margin-top:4px">🎓 Verbs dominats</div>
+        </div>
+      </div>
+
+      <div style="background:rgba(255,255,255,.06);border-radius:16px;padding:16px;margin-bottom:20px">
+        <div style="font-size:12px;color:#06b6d4;letter-spacing:2px;text-transform:uppercase;margin-bottom:12px">Activitat última setmana</div>
+        <div style="display:flex;gap:4px">${barsHtml}</div>
+      </div>
+
+      <div style="background:rgba(255,255,255,.06);border-radius:16px;padding:16px;margin-bottom:20px">
+        <div style="font-size:12px;color:#06b6d4;letter-spacing:2px;text-transform:uppercase;margin-bottom:12px">Progrés dels verbs (${totalVerbs})</div>
+        <div style="height:20px;background:#333;border-radius:10px;overflow:hidden;display:flex">
+          <div style="width:${masteredPct}%;background:#4ade80"></div>
+          <div style="width:${errorPct}%;background:#f87171"></div>
+        </div>
+        <div style="display:flex;gap:16px;margin-top:8px;font-size:12px">
+          <span style="color:#4ade80">🎓 ${mastered} dominats</span>
+          <span style="color:#f87171">✗ ${withErrors} amb errors</span>
+          <span style="color:#888">○ ${untouched} per provar</span>
+        </div>
+      </div>
+
+      ${Object.keys(sessionTypes).length>0?`
+      <div style="background:rgba(255,255,255,.06);border-radius:16px;padding:16px;margin-bottom:20px">
+        <div style="font-size:12px;color:#06b6d4;letter-spacing:2px;text-transform:uppercase;margin-bottom:12px">Per tipus d'activitat</div>
+        ${Object.entries(sessionTypes).map(([type,count])=>{
+          const icons={flashcards:'🃏',drill:'🔥',chat:'💬',roleplay:'🎯',build:'🧩',dictation:'🎧',scene:'🖼️',synonyms:'🔄'};
+          return `<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.06)">
+            <span style="color:#ccc;font-size:14px">${icons[type]||'📝'} ${type}</span>
+            <span style="color:#888;font-size:14px">${count} vegades</span>
+          </div>`;
+        }).join('')}
+      </div>`:''}
+
+      ${totalFails>0?`
+      <div style="background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.2);border-radius:16px;padding:16px">
+        <div style="font-size:12px;color:#f87171;letter-spacing:2px;text-transform:uppercase;margin-bottom:8px">Verbs amb més errors</div>
+        ${fv.sort((a,b)=>(stats[b.en]?.fails||0)-(stats[a.en]?.fails||0)).slice(0,5).map(v=>`
+          <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.06)">
+            <span style="color:#ccc;font-size:14px">${v.en}</span>
+            <span style="color:#f87171;font-size:14px">✗ ${stats[v.en]?.fails||0}</span>
+          </div>`).join('')}
+      </div>`:''}
+    </div>
+  </div>`;
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+// REPETICIÓ ESPAÏADA PER VOCABULARI (flashcards)
+// ══════════════════════════════════════════════════════════════════════════
+// Extend the existing buildNormalDeck to weight verbs by vocabStats too
+const _originalBuildNormalDeck = buildNormalDeck;
+// Override is unnecessary: the existing mechanism with verb stats already works.
+// We add vocab stats tracking for synonym game answers.
+
+function trackSynAnswer(word, correct){
+  const vs=loadVocabStats();
+  const e=vs[word]||{correct:0,wrong:0,lastSeen:0};
+  if(correct) e.correct++;
+  else e.wrong++;
+  e.lastSeen=Date.now();
+  vs[word]=e;
+  saveVocabStats(vs);
+}
+
+// Patch checkSynAnswer to track vocab stats
+const _origCheckSynAnswer = checkSynAnswer;
+checkSynAnswer = function(){
+  if(!synGameState||!synGameState.selectedOpt)return;
+  const card=synGameState.deck[synGameState.idx];
+  const correct=synGameState.selectedOpt===card.answer;
+  trackSynAnswer(card.question, correct);
+  trackSynAnswer(card.answer, correct);
+  synGameState.answered=true;
+  if(correct)synGameState.score++;
+  renderSynGame();
+};
+
+// Override startSynGame to sort pool by error rate (spaced repetition)
+const _origStartSynGame = startSynGame;
+startSynGame = function(){
+  const pool = getSynPool();
+  const vs=loadVocabStats();
+  // Weight: words with more errors appear more often
+  const weighted=[];
+  pool.forEach(pair=>{
+    const e1=vs[pair.ar1]||{wrong:0};
+    const e2=vs[pair.ar2]||{wrong:0};
+    const errorWeight=1+Math.min(e1.wrong+e2.wrong,4);
+    for(let i=0;i<errorWeight;i++) weighted.push(pair);
+  });
+  const shuffled=shuffle(weighted);
+  // Remove duplicates (keep first occurrence)
+  const seen=new Set();
+  const unique=[];
+  shuffled.forEach(p=>{
+    const key=p.ar1+'|'+p.ar2;
+    if(!seen.has(key)){seen.add(key);unique.push(p);}
+  });
+
+  const deck=unique.map(pair=>{
+    const showFirst=Math.random()>.5;
+    const question=showFirst?pair.ar1:pair.ar2;
+    const answer=showFirst?pair.ar2:pair.ar1;
+    const answerCa=showFirst?pair.ca2:pair.ca1;
+    const sameType=pair.type==='syn'?synAntData.synonyms:synAntData.antonyms;
+    const wrongPairs=shuffle(sameType.filter(p=>p.ar1!==pair.ar1)).slice(0,3);
+    const wrongsWithCa=wrongPairs.map(p=>{
+      const pick=Math.random()>.5;
+      return{ar:pick?p.ar1:p.ar2,ca:pick?p.ca1:p.ca2};
+    });
+    const allOpts=shuffle([{ar:answer,ca:answerCa},...wrongsWithCa]);
+    const options=allOpts.map(o=>o.ar);
+    const optsCaMap={};
+    allOpts.forEach(o=>{optsCaMap[o.ar]=o.ca;});
+    return{question,answer,answerCa,type:pair.type,en:pair.en,options,optsCaMap,questionCa:showFirst?pair.ca1:pair.ca2};
+  });
+  synGameState={deck,idx:0,score:0,total:deck.length,answered:false,selectedOpt:null};
+  renderSynGame();
+};
 
 // ══════════════════════════════════════════════════════════════════════════
 // INIT
