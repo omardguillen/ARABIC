@@ -58,6 +58,8 @@ input[type=text]{outline:none;font-family:Arial,sans-serif}
 <div id="screen-stats" class="screen"></div>
 <div id="screen-build" class="screen"></div>
 <div id="screen-dictation" class="screen"></div>
+<div id="screen-vocabflash" class="screen"></div>
+<div id="screen-vocablist" class="screen"></div>
 
 <script>
 // ── DATA ──────────────────────────────────────────────────────────────────
@@ -525,6 +527,13 @@ function loadVocabStats(){try{const r=localStorage.getItem(VOCAB_STATS_KEY);if(r
 function saveVocabStats(s){try{localStorage.setItem(VOCAB_STATS_KEY,JSON.stringify(s));}catch(e){}}
 let vocabStats = loadVocabStats();
 
+// ── VOCAB FLASHCARD STATS (per-word tracking) ──────────────────────────
+const VFLASH_STATS_KEY = "arabic_vocabflash_stats_v1";
+function loadVFlashStats(){try{const r=localStorage.getItem(VFLASH_STATS_KEY);if(r)return JSON.parse(r);}catch(e){}return{};}
+function saveVFlashStats(s){try{localStorage.setItem(VFLASH_STATS_KEY,JSON.stringify(s));}catch(e){}}
+let vflashStats = loadVFlashStats();
+// Format: { "شُقَّة": {ok:3, fail:1, last:"2026-08-25"}, ... }
+
 // ── ACTIVITY TRACKING ────────────────────────────────────────────────────
 const ACTIVITY_KEY = "arabic_activity_log_v1";
 function loadActivity(){try{const r=localStorage.getItem(ACTIVITY_KEY);if(r)return JSON.parse(r);}catch(e){}return{sessions:[],streak:0,lastDate:null};}
@@ -600,14 +609,14 @@ function arabicBlock(verb, color){
     html+=`<div class="ar-box-present">
       <div class="badge-present">مضارع · Present</div>
       <div class="ar" style="font-size:42px;color:${c};line-height:1.4;margin-top:8px">${verb.present}</div>
-      <button class="speak-btn" style="color:#f9d423" onclick="speakAr(${JSON.stringify(verb.present)});this.textContent='🔊';setTimeout(()=>this.textContent='🔈',1800)">🔈</button>
+      <button class="speak-btn" style="color:#f9d423" onclick='speakAr(${JSON.stringify(verb.present)});this.textContent="🔊";setTimeout(()=>this.textContent="🔈",1800)'>🔈</button>
     </div>`;
   }
   if(showPa){
     html+=`<div class="ar-box-past">
       <div class="badge-past">ماضي · Past</div>
       <div class="ar" style="font-size:42px;color:${c};line-height:1.4;margin-top:8px">${verb.past}</div>
-      <button class="speak-btn" style="color:#ff4e50" onclick="speakAr(${JSON.stringify(verb.past)});this.textContent='🔊';setTimeout(()=>this.textContent='🔈',1800)">🔈</button>
+      <button class="speak-btn" style="color:#ff4e50" onclick='speakAr(${JSON.stringify(verb.past)});this.textContent="🔊";setTimeout(()=>this.textContent="🔈",1800)'>🔈</button>
     </div>`;
   }
   html+='</div>';
@@ -659,6 +668,8 @@ function renderMenu(){
       </button>
       <button class="btn-outline" onclick="showScreen('list');renderList()">📋 Veure tots els verbs</button>
       <button class="btn-ai" onclick="showScreen('ai');renderAIMenu()">✨ Activitats amb IA</button>
+      <button onclick="showScreen('vocabflash');renderVocabFlashMenu()" style="padding:15px;border-radius:18px;border:2px solid #a855f7;background:rgba(168,85,247,.08);color:#c084fc;font-size:16px;cursor:pointer;font-weight:600;width:100%">📝 Flashcards de Vocabulari</button>
+      <button onclick="showScreen('vocablist');renderVocabList()" style="padding:15px;border-radius:18px;border:2px solid #8b5cf6;background:rgba(139,92,246,.08);color:#a78bfa;font-size:16px;cursor:pointer;font-weight:600;width:100%">📖 Tot el Vocabulari i Errors</button>
       <button onclick="showScreen('syn');renderSynMenu()" style="padding:15px;border-radius:18px;border:2px solid #10b981;background:rgba(16,185,129,.08);color:#34d399;font-size:16px;cursor:pointer;font-weight:600;width:100%">🔄 Sinònims i Antònims</button>
       <button onclick="showScreen('build');renderBuildMenu()" style="padding:15px;border-radius:18px;border:2px solid #f59e0b;background:rgba(245,158,11,.08);color:#fbbf24;font-size:16px;cursor:pointer;font-weight:600;width:100%">🧩 Construcció de frases</button>
       <button onclick="showScreen('dictation');startDictation()" style="padding:15px;border-radius:18px;border:2px solid #ec4899;background:rgba(236,72,153,.08);color:#f472b6;font-size:16px;cursor:pointer;font-weight:600;width:100%">🎧 Dictat</button>
@@ -805,12 +816,12 @@ function renderList(){
         <div style="flex:1;background:rgba(249,212,35,.06);border-radius:10px;padding:8px;text-align:center">
           <div style="font-size:10px;color:#f9d423;margin-bottom:4px">مضارع</div>
           <div class="ar" style="font-size:26px;color:#fff">${v.present}</div>
-          <button onclick="speakAr(${JSON.stringify(v.present)});this.textContent='🔊';setTimeout(()=>this.textContent='🔈',1800)" style="margin-top:4px;background:none;border:none;color:#f9d423;font-size:15px;cursor:pointer">🔈</button>
+          <button onclick='speakAr(${JSON.stringify(v.present)});this.textContent="🔊";setTimeout(()=>this.textContent="🔈",1800)' style="margin-top:4px;background:none;border:none;color:#f9d423;font-size:15px;cursor:pointer">🔈</button>
         </div>
         <div style="flex:1;background:rgba(255,78,80,.06);border-radius:10px;padding:8px;text-align:center">
           <div style="font-size:10px;color:#ff4e50;margin-bottom:4px">ماضي</div>
           <div class="ar" style="font-size:26px;color:#fff">${v.past}</div>
-          <button onclick="speakAr(${JSON.stringify(v.past)});this.textContent='🔊';setTimeout(()=>this.textContent='🔈',1800)" style="margin-top:4px;background:none;border:none;color:#ff4e50;font-size:15px;cursor:pointer">🔈</button>
+          <button onclick='speakAr(${JSON.stringify(v.past)});this.textContent="🔊";setTimeout(()=>this.textContent="🔈",1800)' style="margin-top:4px;background:none;border:none;color:#ff4e50;font-size:15px;cursor:pointer">🔈</button>
         </div>
       </div>
     </div>`;
@@ -1312,7 +1323,7 @@ function renderTranslate(){
       ? (isAr
           ? `<div style="font-size:16px;color:#f9d423;font-style:italic;margin-top:4px">${item.to}</div>`
           : `<div class="ar" style="font-size:26px;color:#f9d423;line-height:1.5;margin-top:4px">${item.to}
-              <button onclick="speakAr(${JSON.stringify(item.to)});this.textContent='🔊';setTimeout(()=>this.textContent='🔈',1800)" style="background:none;border:none;color:#a78bfa;font-size:16px;cursor:pointer">🔈</button>
+              <button onclick='speakAr(${JSON.stringify(item.to)});this.textContent="🔊";setTimeout(()=>this.textContent="🔈",1800)' style="background:none;border:none;color:#a78bfa;font-size:16px;cursor:pointer">🔈</button>
              </div>`)
       : `<button onclick="revealTranslate(${i})" style="margin-top:10px;padding:8px 16px;border-radius:10px;border:1px solid rgba(167,139,250,.4);background:rgba(167,139,250,.1);color:#a78bfa;font-size:14px;cursor:pointer">Veure traducció</button>`;
     return `<div style="background:rgba(255,255,255,.05);border:1px solid rgba(167,139,250,.2);border-radius:16px;padding:16px 18px">
@@ -1358,7 +1369,7 @@ function renderChat(){
   }).join("");
 
   const quickBtns=["مَرْحَبَا! أَنَا عُمَر","كَيْفَ حَالُك؟","لَا أَفْهَمُ، كَرِّرْ مِنْ فَضْلِك","شُكْرًا!"]
-    .map(s=>`<button onclick="setChatInput(${JSON.stringify(s)})" class="ar" style="padding:6px 12px;border-radius:10px;border:1px solid #444;background:rgba(255,255,255,.04);color:#888;font-size:13px;cursor:pointer;direction:rtl">${s}</button>`)
+    .map(s=>`<button onclick='setChatInput(${JSON.stringify(s)})' class="ar" style="padding:6px 12px;border-radius:10px;border:1px solid #444;background:rgba(255,255,255,.04);color:#888;font-size:13px;cursor:pointer;direction:rtl">${s}</button>`)
     .join("");
 
   document.getElementById("screen-ai-activity").innerHTML=`
@@ -1529,7 +1540,7 @@ function renderThemedChat(theme, systemPrompt){
   }).join("");
 
   const quickBtns = ["نَعَم", "لَا، شُكْرًا", "مِنْ فَضْلِك", "لَا أَفْهَمُ، كَرِّرْ", "شُكْرًا، مَعَ السَّلَامَة"]
-    .map(s => `<button onclick="setThemedInput(${JSON.stringify(s)})" class="ar" style="padding:6px 12px;border-radius:10px;border:1px solid #444;background:rgba(255,255,255,.04);color:#888;font-size:14px;cursor:pointer;direction:rtl">${s}</button>`)
+    .map(s => `<button onclick='setThemedInput(${JSON.stringify(s)})' class="ar" style="padding:6px 12px;border-radius:10px;border:1px solid #444;background:rgba(255,255,255,.04);color:#888;font-size:14px;cursor:pointer;direction:rtl">${s}</button>`)
     .join("");
 
   document.getElementById("screen-ai-activity").innerHTML = `
@@ -2640,6 +2651,516 @@ startSynGame = function(){
   synGameState={deck,idx:0,score:0,total:deck.length,answered:false,selectedOpt:null};
   renderSynGame();
 };
+
+// ══════════════════════════════════════════════════════════════════════════
+// VOCABULARY FLASHCARDS
+// ══════════════════════════════════════════════════════════════════════════
+
+const VOCAB_FLASH_CATEGORIES = {
+  "🏠 Casa": [
+    {ar:"شُقَّة",tr:"pis/apartament"},{ar:"حَيّ",tr:"barri"},{ar:"غُرْفَة",tr:"habitació"},{ar:"غُرْفَة جُلُوس",tr:"sala d'estar"},
+    {ar:"غُرْفَة نَوْم",tr:"dormitori"},{ar:"مَطْبَخ",tr:"cuina"},{ar:"حَمَّام",tr:"bany"},{ar:"أَثَاث",tr:"mobles"},
+    {ar:"سِتَارَة",tr:"cortina"},{ar:"أَرِيكَة",tr:"sofà"},{ar:"سَجَّادَة",tr:"catifa"},{ar:"سَرِير",tr:"llit"},
+    {ar:"ثَلَّاجَة",tr:"nevera"},{ar:"مِرْآة",tr:"mirall"},{ar:"فُرْن",tr:"forn"},{ar:"سَخَّان",tr:"escalfador"},
+    {ar:"مَبْنَى",tr:"edifici"},{ar:"دَوْر",tr:"pis/planta"},{ar:"بَيْت",tr:"casa"},{ar:"خِزَانَة",tr:"armari"},
+    {ar:"مُكَيِّف",tr:"aire condicionat"},{ar:"لَوْحَة",tr:"quadre/pissarra"},{ar:"مِفْتَاح",tr:"clau"}
+  ],
+  "🍽️ Menjar": [
+    {ar:"مَاء",tr:"aigua"},{ar:"قَهْوَة",tr:"cafè"},{ar:"شَاي",tr:"te"},{ar:"حَلِيب",tr:"llet"},
+    {ar:"خُبْز",tr:"pa"},{ar:"أُرُز",tr:"arròs"},{ar:"سَمَك",tr:"peix"},{ar:"لَحْم",tr:"carn"},
+    {ar:"دَجَاج",tr:"pollastre"},{ar:"فَاكِهَة",tr:"fruita"},{ar:"خُضَار",tr:"verdures"},{ar:"سُكَّر",tr:"sucre"},
+    {ar:"عَسَل",tr:"mel"},{ar:"جُبْن",tr:"formatge"},{ar:"زَيْت",tr:"oli"},{ar:"زُبْدَة",tr:"mantega"},
+    {ar:"مُرَبَّى",tr:"melmelada"},{ar:"بَصَل",tr:"ceba"},{ar:"طَمَاطِم",tr:"tomàquet"},{ar:"خِيَار",tr:"cogombre"},
+    {ar:"تَمْر",tr:"dàtil"},{ar:"عِنَب",tr:"raïm"},{ar:"عَدَس",tr:"llenties"},{ar:"فُول",tr:"faves"},
+    {ar:"كَعْك",tr:"galetes"},{ar:"حَلْوَى",tr:"dolços"},{ar:"سَلَطَة",tr:"amanida"},{ar:"عَصِير",tr:"suc"},
+    {ar:"فُطُور",tr:"esmorzar"},{ar:"غَدَاء",tr:"dinar"},{ar:"عَشَاء",tr:"sopar"},{ar:"وَجْبَة",tr:"àpat"},
+    {ar:"طَبَق",tr:"plat"},{ar:"مَائِدَة",tr:"taula parada"},{ar:"مَطْعَم",tr:"restaurant"}
+  ],
+  "✈️ Viatge": [
+    {ar:"سَيَّارَة",tr:"cotxe"},{ar:"حَافِلَة",tr:"autobús"},{ar:"قِطَار",tr:"tren"},{ar:"طَائِرَة",tr:"avió"},
+    {ar:"تَذْكِرَة",tr:"bitllet"},{ar:"حَجْز",tr:"reserva"},{ar:"جَوَاز السَّفَر",tr:"passaport"},{ar:"تَأْشِيرَة",tr:"visat"},
+    {ar:"فُنْدُق",tr:"hotel"},{ar:"مَطَار",tr:"aeroport"},{ar:"مَحَطَّة",tr:"estació"},{ar:"حَقِيبَة",tr:"maleta"},
+    {ar:"رِحْلَة",tr:"viatge/vol"},{ar:"دَرَّاجَة",tr:"bicicleta"},{ar:"سَائِق",tr:"conductor"},
+    {ar:"مُسَافِر",tr:"viatger"},{ar:"بَوَّابَة",tr:"porta d'embarcament"},{ar:"مَدْخَل",tr:"entrada"},
+    {ar:"مَخْرَج",tr:"sortida"},{ar:"إِقْلَاع",tr:"enlairament"},{ar:"سَفِينَة",tr:"vaixell"},
+    {ar:"مِينَاء",tr:"port"},{ar:"عُطْلَة",tr:"vacances"},{ar:"زِيَارَة",tr:"visita"}
+  ],
+  "👨‍👩‍👧‍👦 Família": [
+    {ar:"أَب",tr:"pare"},{ar:"أُمّ",tr:"mare"},{ar:"أَخ",tr:"germà"},{ar:"أُخْت",tr:"germana"},
+    {ar:"جَدّ",tr:"avi"},{ar:"جَدَّة",tr:"àvia"},{ar:"ابْن",tr:"fill"},{ar:"بِنْت",tr:"filla"},
+    {ar:"عَمّ",tr:"oncle patern"},{ar:"عَمَّة",tr:"tieta paterna"},{ar:"خَال",tr:"oncle matern"},
+    {ar:"خَالَة",tr:"tieta materna"},{ar:"زَوْج",tr:"marit"},{ar:"زَوْجَة",tr:"esposa"},
+    {ar:"حَفِيد",tr:"nét"},{ar:"حَفِيدَة",tr:"néta"},{ar:"أَطْفَال",tr:"nens/fills"},
+    {ar:"طِفْل",tr:"nen/infant"},{ar:"أُسْرَة",tr:"família nuclear"},{ar:"وَالِد",tr:"pare (formal)"},
+    {ar:"وَالِدَة",tr:"mare (formal)"}
+  ],
+  "🧍 Cos humà": [
+    {ar:"رَأْس",tr:"cap"},{ar:"عَيْن",tr:"ull"},{ar:"أَنْف",tr:"nas"},{ar:"فَم",tr:"boca"},
+    {ar:"أُذُن",tr:"orella"},{ar:"رَقَبَة",tr:"coll"},{ar:"شَعْر",tr:"cabell"},{ar:"صَدْر",tr:"pit"},
+    {ar:"يَد",tr:"mà"},{ar:"ذِرَاع",tr:"braç"},{ar:"إِصْبَع",tr:"dit"},{ar:"بَطْن",tr:"ventre"},
+    {ar:"فَخِذ",tr:"cuixa"},{ar:"سَاق",tr:"cama"},{ar:"كَعْب",tr:"taló"},{ar:"قَدَم",tr:"peu"},
+    {ar:"رُكْبَة",tr:"genoll"},{ar:"أَسْنَان",tr:"dents"},{ar:"ظَهْر",tr:"esquena"},{ar:"حَنْجَرَة",tr:"gola"}
+  ],
+  "👔 Roba i colors": [
+    {ar:"قَمِيص",tr:"camisa"},{ar:"ثَوْب",tr:"túnica"},{ar:"جَاكِيت",tr:"jaqueta"},{ar:"مِعْطَف",tr:"abric"},
+    {ar:"مَلَابِس",tr:"roba"},{ar:"أَبْيَض",tr:"blanc"},{ar:"أَسْوَد",tr:"negre"},{ar:"أَحْمَر",tr:"vermell"},
+    {ar:"أَخْضَر",tr:"verd"},{ar:"أَزْرَق",tr:"blau"},{ar:"أَصْفَر",tr:"groc"},{ar:"بُنِّي",tr:"marró"},
+    {ar:"رَمَادِي",tr:"gris"},{ar:"بُرْتُقَالِي",tr:"taronja"},{ar:"بَنَفْسَجِي",tr:"violeta"},{ar:"وَرْدِي",tr:"rosa"}
+  ],
+  "📚 Escola": [
+    {ar:"كِتَاب",tr:"llibre"},{ar:"قَلَم",tr:"bolígraf"},{ar:"دَفْتَر",tr:"quadern"},{ar:"مُعْجَم",tr:"diccionari"},
+    {ar:"صَفّ",tr:"classe/aula"},{ar:"دَرْس",tr:"lliçó"},{ar:"امْتِحَان",tr:"examen"},{ar:"لَوْحَة",tr:"pissarra"},
+    {ar:"مُفْرَدَات",tr:"vocabulari"},{ar:"قَوَاعِد",tr:"gramàtica"},{ar:"حَاسُوب",tr:"ordinador"},
+    {ar:"جَامِعَة",tr:"universitat"},{ar:"مَدْرَسَة",tr:"escola"},{ar:"طَالِب",tr:"estudiant"},
+    {ar:"أُسْتَاذ",tr:"professor"},{ar:"مُدَرِّس",tr:"professor (escola)"},{ar:"كُلِّيَّة",tr:"facultat"},
+    {ar:"الرِّيَاضِيَّات",tr:"matemàtiques"},{ar:"العُلُوم",tr:"ciències"},{ar:"جَدْوَل",tr:"horari"}
+  ],
+  "🏥 Salut": [
+    {ar:"طَبِيب",tr:"metge"},{ar:"مُسْتَشْفَى",tr:"hospital"},{ar:"صَيْدَلِيَّة",tr:"farmàcia"},
+    {ar:"دَوَاء",tr:"medicament"},{ar:"صُدَاع",tr:"mal de cap"},{ar:"زُكَام",tr:"constipat"},
+    {ar:"أَلَم",tr:"dolor"},{ar:"مَرِيض",tr:"malalt"},{ar:"مَوْعِد",tr:"cita"},{ar:"رَاحَة",tr:"descans"},
+    {ar:"الصِّحَّة",tr:"salut"},{ar:"تَقْرِير طِبِّي",tr:"informe mèdic"},{ar:"إِسْعَاف",tr:"ambulància"},
+    {ar:"ضَغْط",tr:"pressió arterial"},{ar:"دَم",tr:"sang"},{ar:"قَلْب",tr:"cor"},{ar:"كُلْيَة",tr:"ronyó"},
+    {ar:"حِمْيَة",tr:"dieta"},{ar:"سَلِيم",tr:"sa/intacte"},{ar:"مُمَرِّضَة",tr:"infermera"}
+  ],
+  "⚽ Hobbies": [
+    {ar:"هِوَايَة",tr:"afició"},{ar:"قِرَاءَة",tr:"lectura"},{ar:"رِيَاضَة",tr:"esport"},
+    {ar:"كُرَة القَدَم",tr:"futbol"},{ar:"كُرَة السَّلَّة",tr:"bàsquet"},{ar:"سِبَاحَة",tr:"natació"},
+    {ar:"طَبْخ",tr:"cuinar"},{ar:"خِيَاطَة",tr:"costura"},{ar:"مُوسِيقَى",tr:"música"},
+    {ar:"تَصْوِير",tr:"fotografia"},{ar:"سِيْنِمَا",tr:"cinema"},{ar:"فِيلْم",tr:"pel·lícula"},
+    {ar:"الفُرُوسِيَّة",tr:"equitació"},{ar:"الزِّرَاعَة",tr:"jardineria"},{ar:"الغِنَاء",tr:"cantar"},
+    {ar:"أَلْعَابُ الفِيدْيُو",tr:"videojocs"},{ar:"تَسَلُّقُ الجِبَال",tr:"senderisme"},
+    {ar:"مَعْرَض",tr:"exposició"},{ar:"نَادٍ",tr:"club"},{ar:"لَاعِب",tr:"jugador"}
+  ],
+  "🌤️ Natura": [
+    {ar:"طَقْس",tr:"temps meteorològic"},{ar:"مَطَر",tr:"pluja"},{ar:"شَمْس",tr:"sol"},{ar:"قَمَر",tr:"lluna"},
+    {ar:"سَمَاء",tr:"cel"},{ar:"رِيَاح",tr:"vents"},{ar:"حَارّ",tr:"calent"},{ar:"بَارِد",tr:"fred"},
+    {ar:"دَافِئ",tr:"tebi"},{ar:"مُعْتَدِل",tr:"temperat"},{ar:"غَائِم",tr:"ennuvolat"},{ar:"مِظَلَّة",tr:"paraigua"},
+    {ar:"شَاطِئ",tr:"platja"},{ar:"جَبَل",tr:"muntanya"},{ar:"حَدِيقَة",tr:"jardí/parc"},
+    {ar:"بَحْر",tr:"mar"},{ar:"نَهْر",tr:"riu"},{ar:"بَرّ",tr:"terra/desert"},
+    {ar:"خَيْمَة",tr:"tenda de campanya"},{ar:"فَصْل",tr:"estació (de l'any)"}
+  ],
+  "😊 Emocions": [
+    {ar:"سَعِيد",tr:"content"},{ar:"حَزِين",tr:"trist"},{ar:"مُتَوَتِّر",tr:"nerviós"},{ar:"مُتْعَب",tr:"cansat"},
+    {ar:"مُتَحَمِّس",tr:"entusiasmat"},{ar:"خَائِف",tr:"espantat"},{ar:"هَادِئ",tr:"tranquil"},
+    {ar:"فَخُور",tr:"orgullós"},{ar:"غَاضِب",tr:"enfadat"},{ar:"جَوْعَان",tr:"famolenc"},
+    {ar:"قَلِق",tr:"preocupat"},{ar:"مَشْغُول",tr:"ocupat"},{ar:"سَعَادَة",tr:"felicitat"},
+    {ar:"حُزْن",tr:"tristesa"},{ar:"صَبْر",tr:"paciència"}
+  ],
+  "📏 Adjectius": [
+    {ar:"كَبِير",tr:"gran"},{ar:"صَغِير",tr:"petit"},{ar:"جَمِيل",tr:"bonic"},{ar:"طَوِيل",tr:"llarg/alt"},
+    {ar:"قَصِير",tr:"curt/baix"},{ar:"قَرِيب",tr:"proper"},{ar:"بَعِيد",tr:"llunyà"},{ar:"غَالِي",tr:"car"},
+    {ar:"رَخِيص",tr:"barat"},{ar:"سَرِيع",tr:"ràpid"},{ar:"بَطِيء",tr:"lent"},{ar:"صَعْب",tr:"difícil"},
+    {ar:"سَهْل",tr:"fàcil"},{ar:"جَدِيد",tr:"nou"},{ar:"قَدِيم",tr:"antic"},{ar:"نَظِيف",tr:"net"},
+    {ar:"مُهِمّ",tr:"important"},{ar:"جَيِّد",tr:"bo"},{ar:"سَيِّئ",tr:"dolent"},{ar:"قَوِيّ",tr:"fort"},
+    {ar:"ضَعِيف",tr:"feble"}
+  ],
+  "🔢 Números i temps": [
+    {ar:"وَاحِد",tr:"u"},{ar:"اثْنَان",tr:"dos"},{ar:"ثَلَاثَة",tr:"tres"},{ar:"أَرْبَعَة",tr:"quatre"},
+    {ar:"خَمْسَة",tr:"cinc"},{ar:"سِتَّة",tr:"sis"},{ar:"سَبْعَة",tr:"set"},{ar:"ثَمَانِيَة",tr:"vuit"},
+    {ar:"تِسْعَة",tr:"nou"},{ar:"عَشَرَة",tr:"deu"},{ar:"عِشْرُون",tr:"vint"},{ar:"مِئَة",tr:"cent"},
+    {ar:"أَلْف",tr:"mil"},{ar:"سَاعَة",tr:"hora"},{ar:"دَقِيقَة",tr:"minut"},{ar:"أُسْبُوع",tr:"setmana"},
+    {ar:"شَهْر",tr:"mes"},{ar:"سَنَة",tr:"any"},{ar:"أَمْس",tr:"ahir"},{ar:"اليَوْم",tr:"avui"},
+    {ar:"غَداً",tr:"demà"},{ar:"الصَّبَاح",tr:"matí"},{ar:"مَسَاء",tr:"tarda/vespre"},{ar:"لَيْلًا",tr:"de nit"}
+  ],
+  "🧭 Direccions": [
+    {ar:"أَمَام",tr:"davant"},{ar:"خَلْف",tr:"darrere"},{ar:"يَمِين",tr:"dreta"},{ar:"شِمَال",tr:"esquerra/nord"},
+    {ar:"فَوْق",tr:"a dalt"},{ar:"تَحْت",tr:"a baix"},{ar:"جَنُوب",tr:"sud"},{ar:"شَرْق",tr:"est"},
+    {ar:"غَرْب",tr:"oest"},{ar:"هُنَا",tr:"aquí"},{ar:"هُنَاك",tr:"allà"},{ar:"قَرِيب مِن",tr:"a prop de"},
+    {ar:"بَعِيد عَن",tr:"lluny de"},{ar:"فِي الخَارِج",tr:"fora"},{ar:"فِي الدَّاخِل",tr:"dins"}
+  ],
+  "💼 Professions": [
+    {ar:"طَبِيب",tr:"metge"},{ar:"مُهَنْدِس",tr:"enginyer"},{ar:"طَيَّار",tr:"pilot"},{ar:"صَحَفِيّ",tr:"periodista"},
+    {ar:"مُوَظَّف",tr:"empleat"},{ar:"مُدِير",tr:"director"},{ar:"صَيْدَلِيّ",tr:"farmacèutic"},
+    {ar:"مُتَرْجِم",tr:"traductor"},{ar:"مُصَوِّر",tr:"fotògraf"},{ar:"سِيَاسِيّ",tr:"polític"},
+    {ar:"مُمَرِّض",tr:"infermer"},{ar:"مَضِيفَة طَيَران",tr:"hostessa"}
+  ],
+  "🗣️ Expressions": [
+    {ar:"مَرْحَبَا",tr:"hola"},{ar:"أَهْلًا وَسَهْلًا",tr:"benvingut"},{ar:"شُكْرًا",tr:"gràcies"},
+    {ar:"مَعَ السَّلَامَة",tr:"adéu"},{ar:"مِنْ فَضْلِك",tr:"si us plau"},{ar:"عَفْوًا",tr:"perdó/de res"},
+    {ar:"آسِف",tr:"ho sento"},{ar:"دَائِمًا",tr:"sempre"},{ar:"أَبَدًا",tr:"mai"},{ar:"أَحْيَانًا",tr:"a vegades"},
+    {ar:"رُبَّمَا",tr:"potser"},{ar:"لَكِن",tr:"però"},{ar:"أَخِيرًا",tr:"finalment"},
+    {ar:"بِسَبَب",tr:"a causa de"},{ar:"لِمَاذَا",tr:"per què"},{ar:"كَيْف",tr:"com"},
+    {ar:"أَيْن",tr:"on"},{ar:"مَتَى",tr:"quan"},{ar:"كَمْ",tr:"quant/s"},{ar:"هَل",tr:"(partícula de pregunta)"}
+  ]
+};
+
+let vocabFlashState = null;
+let vocabFlashSelectedCats = [];
+let vocabFlashCount = 20;
+
+function getAllVocabWords(){
+  let all = [];
+  Object.entries(VOCAB_FLASH_CATEGORIES).forEach(([cat,words])=>{
+    words.forEach(w => all.push({...w, cat}));
+  });
+  return all;
+}
+
+function renderVocabFlashMenu(){
+  const cats = Object.keys(VOCAB_FLASH_CATEGORIES);
+  const totalWords = getAllVocabWords().length;
+
+  const catBtns = cats.map(cat => {
+    const n = VOCAB_FLASH_CATEGORIES[cat].length;
+    const sel = vocabFlashSelectedCats.includes(cat);
+    const border = sel ? "#f9d423" : "#444";
+    const bg = sel ? "rgba(249,212,35,.12)" : "rgba(255,255,255,.04)";
+    const color = sel ? "#f9d423" : "#888";
+    return `<button onclick="toggleVocabCat('${cat}')" style="padding:10px 14px;border-radius:14px;border:2px solid ${border};background:${bg};color:${color};font-size:14px;cursor:pointer;text-align:center;line-height:1.3">
+      ${cat}<br><span style="font-size:11px;opacity:.7">${n} paraules</span>
+    </button>`;
+  }).join("");
+
+  const availableWords = vocabFlashSelectedCats.length === 0
+    ? totalWords
+    : vocabFlashSelectedCats.reduce((s,c) => s + VOCAB_FLASH_CATEGORIES[c].length, 0);
+
+  const countBtns = [10,20,30,40,50].map(n => {
+    const sel = vocabFlashCount === n;
+    const disabled = n > availableWords;
+    const border = disabled ? "#333" : (sel ? "#f9d423" : "#555");
+    const bg = disabled ? "rgba(255,255,255,.02)" : (sel ? "rgba(249,212,35,.15)" : "rgba(255,255,255,.04)");
+    const color = disabled ? "#444" : (sel ? "#f9d423" : "#aaa");
+    return `<button onclick="${disabled ? '' : `setVocabCount(${n})`}" style="flex:1;padding:14px 8px;border-radius:14px;border:2px solid ${border};background:${bg};color:${color};font-size:18px;font-weight:700;cursor:${disabled?'default':'pointer'}">${n}</button>`;
+  }).join("");
+
+  document.getElementById("screen-vocabflash").innerHTML = `
+  <div class="wrap" style="padding-top:30px;padding-bottom:40px">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:24px">
+      <button onclick="showScreen('menu');renderMenu()" style="background:none;border:none;color:#888;font-size:28px;cursor:pointer">←</button>
+      <h2 style="font-size:22px;color:#fff">📝 Flashcards de Vocabulari</h2>
+    </div>
+
+    <div style="margin-bottom:24px">
+      <div class="lbl">Categories <span style="color:#888;text-transform:none;letter-spacing:0;font-size:11px">(toca per seleccionar, o cap = totes)</span></div>
+      <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px">
+        ${catBtns}
+      </div>
+      <button onclick="vocabFlashSelectedCats=[];renderVocabFlashMenu()" style="margin-top:8px;padding:8px 16px;border-radius:10px;border:1px solid #444;background:rgba(255,255,255,.04);color:#888;font-size:13px;cursor:pointer;width:100%">
+        🔄 Totes les categories (${totalWords} paraules)
+      </button>
+    </div>
+
+    <div style="margin-bottom:24px">
+      <div class="lbl">Quantes paraules?</div>
+      <div style="display:flex;gap:8px">
+        ${countBtns}
+      </div>
+      <div style="text-align:center;margin-top:6px;color:#666;font-size:12px">${availableWords} paraules disponibles</div>
+    </div>
+
+    <div style="margin-bottom:16px">
+      <div class="lbl">Direcció</div>
+      <div style="display:flex;gap:8px">
+        <button class="seg-btn ${vocabFlashDir==='ar→ca'?'active-y':''}" onclick="vocabFlashDir='ar→ca';renderVocabFlashMenu()" style="flex:1">عربي → Català</button>
+        <button class="seg-btn ${vocabFlashDir==='ca→ar'?'active-y':''}" onclick="vocabFlashDir='ca→ar';renderVocabFlashMenu()" style="flex:1">Català → عربي</button>
+        <button class="seg-btn ${vocabFlashDir==='mix'?'active-y':''}" onclick="vocabFlashDir='mix';renderVocabFlashMenu()" style="flex:1">Mix</button>
+      </div>
+    </div>
+
+    <button class="btn-main" onclick="startVocabFlash()" style="margin-top:8px">▶ Començar!</button>
+  </div>`;
+}
+
+let vocabFlashDir = "ar→ca";
+
+function toggleVocabCat(cat){
+  const idx = vocabFlashSelectedCats.indexOf(cat);
+  if(idx===-1) vocabFlashSelectedCats.push(cat);
+  else vocabFlashSelectedCats.splice(idx,1);
+  // adjust count if needed
+  const avail = vocabFlashSelectedCats.length === 0
+    ? getAllVocabWords().length
+    : vocabFlashSelectedCats.reduce((s,c) => s + VOCAB_FLASH_CATEGORIES[c].length, 0);
+  if(vocabFlashCount > avail) vocabFlashCount = Math.max(10, Math.floor(avail/10)*10 || 10);
+  renderVocabFlashMenu();
+}
+
+function setVocabCount(n){ vocabFlashCount = n; renderVocabFlashMenu(); }
+
+function startVocabFlash(){
+  let pool = [];
+  if(vocabFlashSelectedCats.length === 0){
+    pool = getAllVocabWords();
+  } else {
+    vocabFlashSelectedCats.forEach(cat => {
+      VOCAB_FLASH_CATEGORIES[cat].forEach(w => pool.push({...w, cat}));
+    });
+  }
+  pool = shuffle(pool).slice(0, Math.min(vocabFlashCount, pool.length));
+
+  // Build deck with 4 options each
+  const allWords = getAllVocabWords();
+  const deck = pool.map(word => {
+    const dir = vocabFlashDir === "mix" ? (Math.random()>.5 ? "ar→ca" : "ca→ar") : vocabFlashDir;
+    // pick 3 wrong answers
+    const wrongs = shuffle(allWords.filter(w => w.ar !== word.ar))
+      .slice(0,3)
+      .map(w => dir==="ar→ca" ? w.tr : w.ar);
+    const correct = dir==="ar→ca" ? word.tr : word.ar;
+    const options = shuffle([correct, ...wrongs]);
+    return { word, dir, options, correct };
+  });
+
+  vocabFlashState = { deck, idx:0, score:0, total:deck.length, answered:false, selectedOpt:null };
+  renderVocabFlashCard();
+}
+
+function renderVocabFlashCard(){
+  const s = vocabFlashState;
+  if(!s) return;
+  if(s.idx >= s.total){ renderVocabFlashResult(); return; }
+
+  const card = s.deck[s.idx];
+  const prompt = card.dir==="ar→ca" ? card.word.ar : card.word.tr;
+  const promptLabel = card.dir==="ar→ca" ? "Què significa?" : "Com es diu en àrab?";
+  const isAr = card.dir==="ar→ca";
+  const progress = Math.round((s.idx/s.total)*100);
+
+  const optBtns = card.options.map((opt,i) => {
+    let style = "padding:14px;border-radius:14px;border:2px solid #444;background:rgba(255,255,255,.04);color:#ccc;font-size:16px;cursor:pointer;width:100%;text-align:center;";
+    if(s.answered){
+      if(opt === card.correct) style = "padding:14px;border-radius:14px;border:2px solid #4ade80;background:rgba(74,222,128,.15);color:#4ade80;font-size:16px;cursor:default;width:100%;text-align:center;font-weight:700;";
+      else if(opt === s.selectedOpt) style = "padding:14px;border-radius:14px;border:2px solid #f87171;background:rgba(248,113,113,.15);color:#f87171;font-size:16px;cursor:default;width:100%;text-align:center;";
+      else style = "padding:14px;border-radius:14px;border:2px solid #333;background:rgba(255,255,255,.02);color:#555;font-size:16px;cursor:default;width:100%;text-align:center;";
+    }
+    const optIsAr = card.dir==="ca→ar";
+    const cls = optIsAr ? 'class="ar"' : '';
+    return `<button ${cls} onclick="${s.answered?'':`answerVocabFlash(${i})`}" style="${style}">${opt}</button>`;
+  }).join("");
+
+  document.getElementById("screen-vocabflash").innerHTML = `
+  <div class="wrap" style="padding-top:30px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+      <button onclick="showScreen('menu');renderMenu()" style="background:none;border:none;color:#888;font-size:28px;cursor:pointer">←</button>
+      <span style="color:#888;font-size:14px">${s.idx+1} / ${s.total}</span>
+      <span style="color:#f9d423;font-size:14px;font-weight:700">${s.score} ✓</span>
+    </div>
+    <div class="grad-bar" style="margin-bottom:24px"><div class="grad-bar-fill" style="width:${progress}%"></div></div>
+
+    <div class="card" style="text-align:center;margin-bottom:24px">
+      <div style="font-size:12px;color:#888;letter-spacing:1px;text-transform:uppercase;margin-bottom:12px">${promptLabel}</div>
+      <div ${isAr?'class="ar"':''} style="font-size:${isAr?'44px':'24px'};color:#fff;line-height:1.4;margin-bottom:8px">${prompt}</div>
+      ${isAr ? `<button onclick='speakAr(${JSON.stringify(prompt)})' style="background:none;border:none;font-size:22px;cursor:pointer;padding:4px 14px">🔈</button>` : ""}
+      ${card.word.cat ? `<div style="font-size:11px;color:#666;margin-top:4px">${card.word.cat}</div>` : ""}
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:10px">
+      ${optBtns}
+    </div>
+
+    ${s.answered ? `
+    <div style="text-align:center;margin-top:20px">
+      <div style="color:#888;font-size:13px;margin-bottom:6px">${isAr ? card.word.tr : card.word.ar} ${isAr ? '' : '· '+card.word.tr}</div>
+      <button onclick="nextVocabFlash()" class="btn-main" style="margin-top:12px;font-size:16px;padding:14px">Següent →</button>
+    </div>` : ""}
+  </div>`;
+}
+
+function answerVocabFlash(optIdx){
+  const s = vocabFlashState;
+  if(!s || s.answered) return;
+  const card = s.deck[s.idx];
+  const chosen = card.options[optIdx];
+  s.selectedOpt = chosen;
+  s.answered = true;
+  const isCorrect = chosen === card.correct;
+  if(isCorrect) s.score++;
+  else card.wasWrong = true;
+  // Track per-word stats
+  const key = card.word.ar;
+  if(!vflashStats[key]) vflashStats[key] = {ok:0,fail:0,last:""};
+  if(isCorrect) vflashStats[key].ok++;
+  else vflashStats[key].fail++;
+  vflashStats[key].last = new Date().toISOString().slice(0,10);
+  saveVFlashStats(vflashStats);
+  renderVocabFlashCard();
+}
+
+function nextVocabFlash(){
+  const s = vocabFlashState;
+  if(!s) return;
+  s.idx++;
+  s.answered = false;
+  s.selectedOpt = null;
+  renderVocabFlashCard();
+}
+
+function renderVocabFlashResult(){
+  const s = vocabFlashState;
+  const pct = Math.round((s.score/s.total)*100);
+  const emoji = pct>=90?"🌟":pct>=70?"👏":pct>=50?"💪":"📖";
+  const msg = pct>=90?"Excel·lent!":pct>=70?"Molt bé!":pct>=50?"Bé, continua practicant!":"Necessites repassar més!";
+
+  // collect wrong answers from this session
+  const wrongs = s.deck.filter(c => c.wasWrong);
+
+  const wrongsHtml = wrongs.length > 0 ? `
+    <div style="margin-top:20px;text-align:left;width:100%">
+      <div style="font-size:12px;color:#f87171;letter-spacing:1px;text-transform:uppercase;margin-bottom:10px">Paraules fallades en aquesta ronda:</div>
+      ${wrongs.map(c => `
+        <div style="display:flex;align-items:center;gap:10px;padding:8px 4px;border-bottom:1px solid rgba(255,255,255,.06)">
+          <button onclick='speakAr(${JSON.stringify(c.word.ar)})' style="background:none;border:none;font-size:16px;cursor:pointer">🔈</button>
+          <div class="ar" style="font-size:20px;color:#fca5a5;flex:1">${c.word.ar}</div>
+          <div style="font-size:13px;color:#888">${c.word.tr}</div>
+        </div>`).join("")}
+    </div>` : "";
+
+  document.getElementById("screen-vocabflash").innerHTML = `
+  <div class="wrap center" style="min-height:100vh">
+    <div class="card" style="text-align:center;width:100%;max-width:440px">
+      <div style="font-size:72px;margin-bottom:12px">${emoji}</div>
+      <h2 style="font-size:28px;color:#fff;margin-bottom:8px">${msg}</h2>
+      <div style="font-size:48px;font-weight:700;background:linear-gradient(90deg,#f9d423,#ff4e50);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:8px">${s.score} / ${s.total}</div>
+      <div style="font-size:16px;color:#888;margin-bottom:24px">${pct}% correcte</div>
+      ${wrongsHtml}
+      <div style="display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin-top:20px">
+        <button onclick="startVocabFlash()" style="padding:14px 24px;border-radius:16px;border:none;background:linear-gradient(90deg,#f9d423,#ff4e50);color:#1a1a2e;font-weight:700;font-size:16px;cursor:pointer">🔄 Repetir</button>
+        <button onclick="showScreen('vocabflash');renderVocabFlashMenu()" style="padding:14px 24px;border-radius:16px;border:2px solid #444;background:transparent;color:#888;font-size:16px;cursor:pointer">⚙️ Canviar opcions</button>
+        <button onclick="showScreen('vocablist');renderVocabList()" style="padding:14px 24px;border-radius:16px;border:2px solid #8b5cf6;background:rgba(139,92,246,.08);color:#a78bfa;font-size:16px;cursor:pointer">📖 Veure errors</button>
+        <button onclick="showScreen('menu');renderMenu()" style="padding:14px 24px;border-radius:16px;border:2px solid #444;background:transparent;color:#888;font-size:16px;cursor:pointer">← Menú</button>
+      </div>
+    </div>
+  </div>`;
+
+  // Log activity
+  try{
+    const log = JSON.parse(localStorage.getItem("arabic_activity_log_v1")||"[]");
+    log.push({type:"vocab_flash",date:new Date().toISOString(),score:s.score,total:s.total});
+    localStorage.setItem("arabic_activity_log_v1",JSON.stringify(log.slice(-200)));
+  }catch(e){}
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+// VOCABULARY LIST (full browser with stats)
+// ══════════════════════════════════════════════════════════════════════════
+
+let vocabListFilter = "all"; // "all" or category key
+let vocabListSort = "cat";   // "cat" | "fails" | "alpha"
+
+function renderVocabList(){
+  const cats = Object.keys(VOCAB_FLASH_CATEGORIES);
+  const allWords = getAllVocabWords();
+
+  // filter
+  let words = vocabListFilter === "all"
+    ? allWords
+    : allWords.filter(w => w.cat === vocabListFilter);
+
+  // sort
+  if(vocabListSort === "fails"){
+    words.sort((a,b) => {
+      const fa = (vflashStats[a.ar]||{}).fail||0;
+      const fb = (vflashStats[b.ar]||{}).fail||0;
+      return fb - fa || a.ar.localeCompare(b.ar,"ar");
+    });
+  } else if(vocabListSort === "alpha"){
+    words.sort((a,b) => a.ar.localeCompare(b.ar,"ar"));
+  }
+  // "cat" = default order by category
+
+  // top failures summary
+  const allWithStats = allWords.map(w => ({...w, ...(vflashStats[w.ar]||{ok:0,fail:0})})).filter(w=>w.fail>0);
+  allWithStats.sort((a,b) => b.fail - a.fail);
+  const topFails = allWithStats.slice(0,8);
+
+  const totalOk = Object.values(vflashStats).reduce((s,v)=>s+(v.ok||0),0);
+  const totalFail = Object.values(vflashStats).reduce((s,v)=>s+(v.fail||0),0);
+  const totalPlayed = totalOk + totalFail;
+
+  // filter buttons
+  const filterBtns = [`<button onclick="vocabListFilter='all';renderVocabList()" style="padding:6px 12px;border-radius:10px;border:1px solid ${vocabListFilter==='all'?'#f9d423':'#444'};background:${vocabListFilter==='all'?'rgba(249,212,35,.12)':'rgba(255,255,255,.04)'};color:${vocabListFilter==='all'?'#f9d423':'#888'};font-size:12px;cursor:pointer">Totes</button>`]
+    .concat(cats.map(cat =>
+      `<button onclick="vocabListFilter='${cat}';renderVocabList()" style="padding:6px 10px;border-radius:10px;border:1px solid ${vocabListFilter===cat?'#f9d423':'#444'};background:${vocabListFilter===cat?'rgba(249,212,35,.12)':'rgba(255,255,255,.04)'};color:${vocabListFilter===cat?'#f9d423':'#888'};font-size:12px;cursor:pointer">${cat}</button>`
+    )).join("");
+
+  // word rows
+  let currentCat = "";
+  let rows = "";
+  words.forEach(w => {
+    const st = vflashStats[w.ar] || {ok:0,fail:0};
+    const total = st.ok + st.fail;
+    const pct = total > 0 ? Math.round((st.ok/total)*100) : -1;
+
+    // category header (only in "cat" sort)
+    if(vocabListSort === "cat" && vocabListFilter === "all" && w.cat !== currentCat){
+      currentCat = w.cat;
+      rows += `<div style="padding:12px 0 6px;border-bottom:1px solid #333;margin-top:12px">
+        <span style="font-size:15px;font-weight:700;color:#f9d423">${w.cat}</span>
+        <span style="color:#666;font-size:12px;margin-left:8px">${VOCAB_FLASH_CATEGORIES[w.cat].length} paraules</span>
+      </div>`;
+    }
+
+    // color by performance
+    let barColor = "#444";
+    let failBadge = "";
+    if(total > 0){
+      barColor = pct >= 80 ? "#4ade80" : pct >= 50 ? "#fbbf24" : "#f87171";
+    }
+    if(st.fail > 0){
+      failBadge = `<span style="color:#f87171;font-size:11px;font-weight:700">${st.fail}✗</span>`;
+    }
+
+    rows += `<div style="display:flex;align-items:center;gap:10px;padding:10px 4px;border-bottom:1px solid rgba(255,255,255,.06)">
+      <button onclick='speakAr(${JSON.stringify(w.ar)})' style="background:none;border:none;font-size:16px;cursor:pointer;padding:2px 6px;flex-shrink:0">🔈</button>
+      <div style="flex:1;min-width:0">
+        <div class="ar" style="font-size:22px;color:#fff;line-height:1.3">${w.ar}</div>
+        <div style="font-size:13px;color:#888;margin-top:2px">${w.tr}</div>
+      </div>
+      <div style="text-align:right;flex-shrink:0;min-width:70px">
+        ${total > 0 ? `
+          <div style="display:flex;align-items:center;gap:6px;justify-content:flex-end">
+            <span style="color:#4ade80;font-size:11px">${st.ok}✓</span>
+            ${failBadge}
+          </div>
+          <div style="width:50px;height:4px;background:#333;border-radius:2px;margin-top:4px;margin-left:auto">
+            <div style="width:${pct}%;height:100%;background:${barColor};border-radius:2px"></div>
+          </div>
+        ` : `<span style="color:#555;font-size:11px">—</span>`}
+      </div>
+    </div>`;
+  });
+
+  document.getElementById("screen-vocablist").innerHTML = `
+  <div class="wrap" style="padding-top:30px;padding-bottom:40px">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px">
+      <button onclick="showScreen('menu');renderMenu()" style="background:none;border:none;color:#888;font-size:28px;cursor:pointer">←</button>
+      <h2 style="font-size:22px;color:#fff">📖 Tot el Vocabulari</h2>
+    </div>
+
+    ${totalPlayed > 0 ? `
+    <div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:16px;margin-bottom:20px">
+      <div style="display:flex;justify-content:space-around;text-align:center;margin-bottom:${topFails.length>0?'14px':'0'}">
+        <div><div style="font-size:24px;font-weight:700;color:#fff">${totalPlayed}</div><div style="font-size:11px;color:#888">respostes</div></div>
+        <div><div style="font-size:24px;font-weight:700;color:#4ade80">${totalOk}</div><div style="font-size:11px;color:#888">correctes</div></div>
+        <div><div style="font-size:24px;font-weight:700;color:#f87171">${totalFail}</div><div style="font-size:11px;color:#888">errors</div></div>
+        <div><div style="font-size:24px;font-weight:700;color:#fbbf24">${totalPlayed>0?Math.round((totalOk/totalPlayed)*100):0}%</div><div style="font-size:11px;color:#888">taxa</div></div>
+      </div>
+      ${topFails.length > 0 ? `
+      <div style="border-top:1px solid rgba(255,255,255,.08);padding-top:12px">
+        <div style="font-size:12px;color:#f87171;letter-spacing:1px;text-transform:uppercase;margin-bottom:8px">🔥 Més fallades</div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px">
+          ${topFails.map(w => `<span class="ar" style="padding:4px 10px;border-radius:8px;background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.3);color:#fca5a5;font-size:14px">${w.ar} <span style="font-size:10px;color:#f87171">(${w.fail}✗)</span></span>`).join("")}
+        </div>
+      </div>` : ""}
+    </div>` : ""}
+
+    <div style="margin-bottom:16px">
+      <div style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap">
+        ${filterBtns}
+      </div>
+      <div style="display:flex;gap:8px">
+        <button onclick="vocabListSort='cat';renderVocabList()" class="seg-btn ${vocabListSort==='cat'?'active-y':''}" style="flex:1;padding:8px;font-size:12px">Per categoria</button>
+        <button onclick="vocabListSort='fails';renderVocabList()" class="seg-btn ${vocabListSort==='fails'?'active-y':''}" style="flex:1;padding:8px;font-size:12px">Per errors ↓</button>
+        <button onclick="vocabListSort='alpha';renderVocabList()" class="seg-btn ${vocabListSort==='alpha'?'active-y':''}" style="flex:1;padding:8px;font-size:12px">Alfabètic</button>
+      </div>
+    </div>
+
+    <div style="color:#666;font-size:12px;margin-bottom:8px">${words.length} paraules</div>
+    <div>${rows}</div>
+  </div>`;
+}
 
 // ══════════════════════════════════════════════════════════════════════════
 // INIT
