@@ -2891,13 +2891,15 @@ function startVocabFlash(){
   pool = shuffle(pool).slice(0, Math.min(vocabFlashCount, pool.length));
 
   // Build deck with 4 options each
+  // Prioritize same-category distractors so answers aren't obvious
   const allWords = getAllVocabWords();
   const deck = pool.map(word => {
     const dir = vocabFlashDir === "mix" ? (Math.random()>.5 ? "ar→ca" : "ca→ar") : vocabFlashDir;
-    // pick 3 wrong answers
-    const wrongs = shuffle(allWords.filter(w => w.ar !== word.ar))
-      .slice(0,3)
-      .map(w => dir==="ar→ca" ? w.tr : w.ar);
+    // pick 3 wrong answers: prefer same category, fill with others if needed
+    const sameCat = shuffle(allWords.filter(w => w.ar !== word.ar && w.cat === word.cat));
+    const otherCat = shuffle(allWords.filter(w => w.ar !== word.ar && w.cat !== word.cat));
+    const wrongPool = [...sameCat, ...otherCat];
+    const wrongs = wrongPool.slice(0,3).map(w => dir==="ar→ca" ? w.tr : w.ar);
     const correct = dir==="ar→ca" ? word.tr : word.ar;
     const options = shuffle([correct, ...wrongs]);
     return { word, dir, options, correct };
