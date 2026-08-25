@@ -258,6 +258,11 @@ const verbs = [
   // New verbs from book Units 10/13/16
   { en: "to rain", present: "يُمْطِرُ", past: "أَمْطَرَ" },
   { en: "to do umra (minor pilgrimage)", present: "يَعْتَمِرُ", past: "اعْتَمَرَ" },
+  // New verbs from Tabeer Level 1 (Units 1 & 3)
+  { en: "to take off (plane)", present: "يُقْلِعُ", past: "أَقْلَعَ" },
+  { en: "to head for / go towards", present: "يَتَّجِهُ", past: "اتَّجَهَ" },
+  { en: "to weigh", present: "يَزِنُ", past: "وَزَنَ" },
+  { en: "to know / be familiar with", present: "يَعْرِفُ", past: "عَرَفَ" },
 ];
 
 const VOCAB_CONTEXT = `
@@ -396,6 +401,18 @@ PARTICIPIS ÀRABS: مُسَافِر (viatjant), دَارِس (estudiant), كَا
 EXPRESSIONS RELIGIOSES: جَزَاكَ اللَّه خَيْرًا (que Déu et recompens), آسِف (ho sento), الحَمْدُ لِلَّه (gràcies a Déu), مُنَبِّه (alarma), اللَّيْل (nit), فِكْرَة طَيِّبَة (bona idea!)
 
 NEGACIÓ: لَيْسَ (no és, m), لَيْسَت (no és, f), لَسْتُ (no sóc)
+
+PORT I MARINA (Tabeer Unit 3, Lesson 9): مِينَاء/مَوَانِئ (port/ports), سَفِينَة/سُفُن (vaixell/vaixells), نَاقِلَة (vaixell cisterna/tanker), نَفْط (petroli), بَضَائِع (mercaderies/goods), رُكَّاب/رَاكِب (passatgers/passatger), ضَخْمَة (enorme/huge), مُمْتِعَة (entretinguda/enjoyable), أَشْكَال (formes), أَحْجَام (mides), مُخْتَلِفَة (diferents), إِقَامَة (residència, oposat de سَفَر), عَاصِمَة (capital), مَلْعَب/مَلَاعِب (estadi/estadis), يَحْمِلُ/حَمَلَ (portar/carry), يَنْظُرُ/نَظَرَ (mirar)
+
+COMPARATIUS (أَفْعَل التَّفْضِيل): أَكْبَرُ (més gran), أَصْغَرُ (més petit), أَبْعَدُ (més lluny), أَقْرَبُ (més a prop), أَطْوَلُ (més llarg/alt), أَقْصَرُ (més curt), أَسْرَعُ (més ràpid), أَقْدَمُ (més antic), أَوْسَعُ (més ample), أَجْمَلُ (més bonic), أَنْظَفُ (més net), أَبْدَعُ (més creatiu), أَثْقَلُ (més pesat). Estructura: أَكْبَرُ مِنْ (més gran que), مَا أَبْدَعَ! (que creatiu!/exclamació)
+
+TRANSPORT URBÀ (Tabeer Unit 3, Lesson 7): سَيَّارَات الأُجْرَة (taxis), الحَافِلَات (autobusos), مَوَاقِف (parades), شَارِع/شَوَارِع (carrer/carrers), مُزْدَحِمَة (atapeïda/crowded), وَسِيلَة (mitjà de transport), دَرَّاجَة (bicicleta), غَالِيَة (cara), يَعْرِفُ/عَرَفَ (saber/conèixer), يَرْكَبُ (agafar transport/ride)
+
+TREN I VACANCES (Tabeer Unit 3, Lesson 7): قِطَار (tren), مَحَطَّة (estació), الْمَنَاظِر (paisatges/vistes), هِوَايَة (hobby/afició), عُطْلَة (vacances), عُطْلَة أُسْبُوعِيَّة (cap de setmana), مَانِع (impediment), فَقَط (només/only), لَكِنْ (però/but), يُشَاهِدُ/شَاهَدَ (mirar/veure), يُفَضِّلُ/فَضَّلَ (preferir)
+
+EXPRESSIONS NOVES (Tabeer): حَيَّاكَ اللَّهُ (benvingut!, que Déu et doni vida), لَا مَانِعَ (no hi ha problema/d'acord), يَالَهَا مِنْ رِحْلَةٍ مُمْتِعَةٍ! (quina excursió tan divertida!), أَهْلًا يَا (hola, + nom), أَهْلًا وَسَهْلًا (benvingut), إِلَى اللِّقَاءِ (fins aviat), شُكْرًا جَزِيلًا (moltes gràcies), هَذَا أَفْضَلُ (això és millor), يُمْكِنُكَ أَنْ (pots + verb), مَا رَأْيُكَ فِي (quina és la teva opinió sobre), سَهْلٌ جِدًّا (molt fàcil), لِأَنَّنِي (perquè jo), لِمَاذَا لَا (per què no)
+
+DIÀLEG AEROPORT (frases clau Tabeer Unit 1): أُرِيدُ أَنْ أَحْجِزَ لِلرِّيَاضِ (vull reservar per a Riad), اِحْجِزْ لِي مَكَانًا (reserva'm un lloc), أَبِالدَّرَجَةِ الأُولَى أَمِ السِّيَاحِيَّةِ؟ (primera classe o turista?), عَلَيْكَ أَنْ تُؤَكِّدَ الحَجْزَ (has de confirmar la reserva), مَتَى تُقْلِعُ الطَّائِرَةُ؟ (quan surt l'avió?), وَمَتَى أَحْضُرُ إِلَى المَطَارِ؟ (i quan he de venir a l'aeroport?), قَبْلَ الإِقْلَاعِ بِسَاعَةٍ عَلَى الأَقَلِّ (una hora abans com a mínim), ضَعْهَا عَلَى المِيزَانِ (posa-la a la balança), الوَزْنُ الزَّائِدُ عَشَرَةُ كِيلُوَاتٍ (l'excés de pes és deu quilos), اِمْلَأْ بِطَاقَةَ الدُّخُولِ (omple la targeta d'entrada), اتَّجِهْ إِلَى بَهْوِ المُسَافِرِينَ (vés a la sala de passatgers), هَلْ تَسْمَحُ بِالجَوَازِ؟ (em permet el passaport?), بِكُلِّ سُرُورٍ (amb tot el plaer), اُدْخُلْ إِلَى بَهْوِ المُغَادَرَةِ (entra a la sala de sortida)
 
 MENJAR AVANÇAT: مُرَبَّى (melmelada), زُبْدَة (mantequilla), حَلْوَى (dolços/postres), عَدَس (llenties), فُول (faves), كَعْك (galetes/pastes)
 
@@ -2057,6 +2074,17 @@ const BUILD_SENTENCES = [
   {words:["نَصَحَهُ","الطَّبِيبُ","بِالرَّاحَةِ","وَالدَّوَاءِ"], correct:"نَصَحَهُ الطَّبِيبُ بِالرَّاحَةِ وَالدَّوَاءِ", ca:"El metge li va recomanar descans i medicaments"},
   {words:["لَا","يُحِبُّ","خَالِدٌ","السَّفَرَ","بِالبَحْرِ"], correct:"لَا يُحِبُّ خَالِدٌ السَّفَرَ بِالبَحْرِ", ca:"A Khalid no li agrada viatjar per mar"},
   {words:["اسْتَيْقَظَ","مُبَكِّرًا","وَذَهَبَ","إِلَى","المَسْجِدِ"], correct:"اسْتَيْقَظَ مُبَكِّرًا وَذَهَبَ إِلَى المَسْجِدِ", ca:"Es va despertar d'hora i va anar a la mesquita"},
+  // Tabeer Unit 1 - Travel
+  {words:["أُرِيدُ","أَنْ","أَحْجِزَ","لِلرِّيَاضِ"], correct:"أُرِيدُ أَنْ أَحْجِزَ لِلرِّيَاضِ", ca:"Vull reservar per a Riad"},
+  {words:["مَتَى","تُقْلِعُ","الطَّائِرَةُ","مِنَ","المَطَارِ؟"], correct:"مَتَى تُقْلِعُ الطَّائِرَةُ مِنَ المَطَارِ؟", ca:"Quan surt l'avió de l'aeroport?"},
+  {words:["عَلَيْكَ","أَنْ","تُؤَكِّدَ","الحَجْزَ","قَبْلَ","السَّفَرِ"], correct:"عَلَيْكَ أَنْ تُؤَكِّدَ الحَجْزَ قَبْلَ السَّفَرِ", ca:"Has de confirmar la reserva abans del viatge"},
+  {words:["ضَعْهَا","عَلَى","المِيزَانِ","مِنْ","فَضْلِكَ"], correct:"ضَعْهَا عَلَى المِيزَانِ مِنْ فَضْلِكَ", ca:"Posa-la a la balança si us plau"},
+  {words:["تَسَلَّمَ","مَحْمُودٌ","التَّذْكِرَةَ","وَالجَوَازَ"], correct:"تَسَلَّمَ مَحْمُودٌ التَّذْكِرَةَ وَالجَوَازَ", ca:"Mahmoud va rebre el bitllet i el passaport"},
+  // Tabeer Unit 3 - Transport & Port
+  {words:["أُفَضِّلُ","السَّفَرَ","بِالقِطَارِ","لِأَنَّنِي","أُشَاهِدُ","المَنَاظِرَ"], correct:"أُفَضِّلُ السَّفَرَ بِالقِطَارِ لِأَنَّنِي أُشَاهِدُ المَنَاظِرَ", ca:"Prefereixo viatjar en tren perquè veig els paisatges"},
+  {words:["هَذِهِ","السُّفُنُ","تَحْمِلُ","الرُّكَّابَ","وَالبَضَائِعَ"], correct:"هَذِهِ السُّفُنُ تَحْمِلُ الرُّكَّابَ وَالبَضَائِعَ", ca:"Aquests vaixells porten passatgers i mercaderies"},
+  {words:["أَسْكُنُ","قُرْبَ","المَطَارِ","وَسَيَّارَاتُ","الأُجْرَةِ","غَالِيَةٌ"], correct:"أَسْكُنُ قُرْبَ المَطَارِ وَسَيَّارَاتُ الأُجْرَةِ غَالِيَةٌ", ca:"Visc a prop de l'aeroport i els taxis són cars"},
+  {words:["يُمْكِنُكَ","أَنْ","تَشْتَرِيَ","دَرَّاجَةً"], correct:"يُمْكِنُكَ أَنْ تَشْتَرِيَ دَرَّاجَةً", ca:"Pots comprar una bicicleta"},
 ];
 
 let buildState = null;
@@ -2178,6 +2206,19 @@ const DICTATION_SENTENCES = [
   {ar:"كَتَبَ الرِّسَالَةَ وَأَرْسَلَهَا", ca:"Va escriure la carta i la va enviar", plain:"كتب الرسالة وارسلها"},
   {ar:"نَامَ الطِّفْلُ بَعْدَ العَشَاءِ", ca:"El nen va dormir després del sopar", plain:"نام الطفل بعد العشاء"},
   {ar:"اشْتَرَيْتُ خُبْزًا وَجُبْنًا", ca:"He comprat pa i formatge", plain:"اشتريت خبزا وجبنا"},
+  // Tabeer Unit 1 - Travel
+  {ar:"أُرِيدُ أَنْ أَحْجِزَ لِلرِّيَاضِ", ca:"Vull reservar per a Riad", plain:"اريد ان احجز للرياض"},
+  {ar:"مَتَى تُقْلِعُ الطَّائِرَةُ؟", ca:"Quan surt l'avió?", plain:"متى تقلع الطائرة"},
+  {ar:"هُنَاكَ رِحْلَةٌ يَوْمَ السَّبْتِ", ca:"Hi ha un vol dissabte", plain:"هناك رحلة يوم السبت"},
+  {ar:"اِحْجِزْ لِي مَكَانًا", ca:"Reserva'm un lloc", plain:"احجز لي مكانا"},
+  {ar:"التَّذْكِرَةَ وَجَوَازَ السَّفَرِ مِنْ فَضْلِكَ", ca:"El bitllet i el passaport si us plau", plain:"التذكرة وجواز السفر من فضلك"},
+  {ar:"أَنَا ذَاهِبٌ إِلَى الرِّيَاضِ", ca:"Vaig cap a Riad", plain:"انا ذاهب الى الرياض"},
+  {ar:"مَعِي حَقِيبَةٌ وَاحِدَةٌ", ca:"Tinc una maleta", plain:"معي حقيبة واحدة"},
+  // Tabeer Unit 3 - Transport & Port
+  {ar:"أُفَضِّلُ القِطَارَ لِأُشَاهِدَ المَنَاظِرَ", ca:"Prefereixo el tren per veure els paisatges", plain:"افضل القطار لاشاهد المناظر"},
+  {ar:"الحَافِلَاتُ دَائِمًا مُزْدَحِمَةٌ", ca:"Els autobusos sempre estan plens", plain:"الحافلات دائما مزدحمة"},
+  {ar:"هَذَا مِينَاءُ الدَّمَّامِ كَبِيرٌ", ca:"Aquest és el port de Dammam, és gran", plain:"هذا ميناء الدمام كبير"},
+  {ar:"أَنَا أُحِبُّ القِرَاءَةَ وَالسَّفَرَ", ca:"M'agrada llegir i viatjar", plain:"انا احب القراءة والسفر"},
 ];
 
 let dictState = null;
